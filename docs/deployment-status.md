@@ -27,10 +27,10 @@ commits in `Vapor-Server-Root` may be newer than the runtime-impacting commit
 recorded here.
 
 ```text
-Vapor-Server-Root       1088d56 Add server state export restore scripts
+Vapor-Server-Root       c559c91 Wire identity auth service config
 Vapor-Homepage-Server   a41aedc4180792d5561a8e3bf12a1383e172c1ea
-Vapor-Docs-Server       f969ed4669e1bfa7637cc1f1afb3f61e1f4735a3
-Vapor-Identity-Server   08715c4d6f85cf6daa2a24505dd4fa36fa0e404f
+Vapor-Docs-Server       27518a45a1916678615620c5047de70296644ffe
+Vapor-Identity-Server   98c252e48c99412d0d952a1fb306b1238dd446c2
 Vapor-Diagnostics-Server 7e08c425ac07bf65ebf16e9c993bf07362f49509
 ```
 
@@ -53,8 +53,13 @@ Vapor-Diagnostics-Server 7e08c425ac07bf65ebf16e9c993bf07362f49509
   endpoint.
 - Identity database files are owned by `vapor:vapor` with restrictive file
   permissions.
-- A placeholder docs page was uploaded through the token-protected docs upload
-  endpoint.
+- Identity auth readiness endpoint is deployed. Steam and GitHub verification
+  endpoints fail closed until server-local external credentials are configured.
+- Identity read-only admin dashboard is deployed and protected by server-local
+  Basic auth. It has only been verified through localhost/SSH, not used over the
+  temporary public HTTP fallback.
+- Curated Vapor docs are deployed through the SSH upload path: 410 files,
+  8,739,662 bytes uncompressed, served under `/docs/`.
 - A diagnostics smoke run was uploaded and verified to redact obvious secret
   tokens on disk.
 - A root-only state export bundle was created under `/var/backups/vapor-server`
