@@ -19,6 +19,9 @@ Vapor-Server-Root/
     systemd/
     scripts/
 
+  docs/
+    decisions-and-backlog.md
+
   crates/
     vapor_server_shared/   # optional later
 ```
@@ -55,4 +58,9 @@ repo composes those into whole-conglomerate export/import.
 
 ## Current status
 
-Initial planning scaffold only. No server implementation is accepted yet.
+Initial service scaffolds exist in the service repositories and are tracked here
+as deinitialized submodules. The root repo records deployment topology and
+operations decisions, but does not own service business logic.
+
+See `docs/decisions-and-backlog.md` for the accepted boundaries, pending
+decisions, and future/backburner items that should not be lost.

@@ -9,5 +9,7 @@ identity/      -> Vapor-Identity-Server
 diagnostics/   -> Vapor-Diagnostics-Server
 ```
 
-The service repositories are empty at initial scaffold time. Add them as
-submodules after each service repository has an initial commit.
+The service repositories are tracked as submodules. Local root checkouts may
+leave these submodule worktrees deinitialized when only orchestration metadata is
+being edited; the authoritative service work normally happens in the sibling
+service repositories.

@@ -1,6 +1,6 @@
 [server_root]
 name = "Vapor Server Root"
-status = "planning-scaffold"
+status = "service-scaffold"
 
 [[services]]
 id = "homepage"
