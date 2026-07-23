@@ -1,4 +1,4 @@
-vapor.ghf-studios.site {
+{{VAPOR_DOMAIN}} {
 	encode zstd gzip
 
 	handle_path /docs/* {

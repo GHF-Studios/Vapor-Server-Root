@@ -32,37 +32,55 @@ while the implementation is still moving quickly.
   empty initialization, export, import, and rebuild-from-source are first-class
   operational goals.
 - The current deployment direction is direct Linux service hosting with Caddy
-  and systemd. Plesk is not required for the Vapor server MVP unless explicitly
-  chosen later.
+  and systemd. Plesk is not required and is not part of the Vapor server MVP.
 - If deploying without Plesk, Ubuntu 26.04 LTS is an acceptable baseline. If
   deploying with Plesk, use the latest Plesk-supported Ubuntu LTS instead of
   Ubuntu 26.04 until Plesk support catches up.
+- The ordered domain is `ghf-studios.site`; the intended Vapor service host is
+  `vapor.ghf-studios.site`.
+- Identity must be database-first. Do not base real identity state on an ad-hoc
+  filesystem registry file.
+- SQLite is acceptable for the initial single-VPS vertical slice when used as a
+  real database: migrations, restrictive ownership/permissions, WAL mode,
+  backups/export, and service-owned schema management.
+- PostgreSQL remains the likely migration target if the server grows beyond a
+  single VPS, needs multi-node operation, or has concurrency/operations needs
+  that justify the extra service.
+- Automatic deployment should follow a real branch-based path. The initial
+  target branch is `main` unless a dedicated deployment branch is introduced.
 
 ## Current scaffold behavior
 
 - Homepage serves public homepage/legal placeholder routes and health.
 - Docs serves health, token-protected current-docs upload, and token-protected
   export scaffolds.
-- Identity serves health/status plus token-protected init/export scaffolds.
+- Identity serves health/status plus token-protected init/export scaffolds
+  backed by SQLite/SQLx schema bootstrap.
 - Diagnostics accepts unauthenticated upload scaffolds and keeps list/download/
   export behind an admin token for now.
 - `Vapor-Server-Root` tracks the services as root-level submodules named after
   their repositories. Normal local development should use those submodule
   worktrees, not separate sibling checkouts.
+- `Vapor-Server-Root` now contains first-pass direct VPS deployment automation:
+  Ubuntu bootstrap, root-repo deploy, Caddy config installation, systemd unit
+  installation, and local health checks.
 
 ## Near-term backlog
 
-- Finalize the VPS provisioning model around direct Caddy/systemd deployment.
-- Decide the public domain name and final Caddy route configuration.
-- Add root-level bootstrap/rebuild scripts once the VPS target is chosen.
-- Add systemd unit templates for the four service binaries.
-- Define state directory layout and ownership for deployment.
+- Review and run the VPS provisioning model around direct Caddy/systemd
+  deployment.
+- Wire DNS for `vapor.ghf-studios.site` once the domain is active.
+- Finalize the Caddy route configuration for `vapor.ghf-studios.site`.
+- Add restore/import/export orchestration scripts.
+- Add SQLite migration/bootstrap handling for identity and any service-owned
+  state that should be queryable.
 - Define export/import bundle formats for docs, identity, and diagnostics.
 - Add docs deployment from a Vapor-owned/root-owned publish workflow.
 - Define diagnostics upload request schema, redaction contract, size limits,
   retention policy, and root-dev download/export flow.
 - Replace placeholder admin tokens with identity-backed authorization once
-  identity is ready enough.
+  identity is ready enough, but do not make identity a filesystem-registry
+  prototype first.
 - Add real Steam identity verification using Steam session/auth tickets and
   server-side Steam WebAPI validation.
 - Add GitHub Device Flow for developer identity linking.
@@ -72,7 +90,7 @@ while the implementation is still moving quickly.
 
 ## Explicitly not current scope
 
-- Full VPS deployment.
+- Plesk setup.
 - Steam account linking implementation.
 - GitHub Device Flow implementation.
 - Server-mediated Steam publishing credentials.

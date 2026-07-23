@@ -1,6 +1,18 @@
 [server_root]
 name = "Vapor Server Root"
 status = "service-scaffold"
+public_domain = "vapor.ghf-studios.site"
+
+[deployment]
+baseline_os = "ubuntu-26.04-lts"
+reverse_proxy = "caddy"
+service_manager = "systemd"
+panel = "none"
+source_branch = "main"
+
+[database]
+initial_engine = "sqlite"
+state_root = "/var/lib/vapor-server"
 
 [[services]]
 id = "homepage"
