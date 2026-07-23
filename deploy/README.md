@@ -62,3 +62,9 @@ for smoke testing only; the intended public endpoint remains
   token-protected docs endpoint.
 - `scripts/smoke-diagnostics.sh`: upload a diagnostics smoke run and verify
   obvious secret redaction.
+- `scripts/build-vapor-root-docs-bundle.sh`: build a curated Vapor docs tar.gz
+  bundle from a local `Vapor-Root` checkout.
+- `scripts/upload-docs-via-ssh.sh`: upload a docs bundle over SSH so the docs
+  admin token stays server-local.
+- `scripts/publish-vapor-root-docs.sh`: build and upload the curated docs
+  bundle in one operator command.
