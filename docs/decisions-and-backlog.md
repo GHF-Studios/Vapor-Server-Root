@@ -63,7 +63,8 @@ while the implementation is still moving quickly.
   worktrees, not separate sibling checkouts.
 - `Vapor-Server-Root` now contains first-pass direct VPS deployment automation:
   Ubuntu bootstrap, root-repo deploy, Caddy config installation, systemd unit
-  installation, and local health checks.
+  installation, automatic branch polling via systemd timer, and local health
+  checks.
 - Domain-independent pre-DNS work is allowed through temporary HTTP fallback
   routing, SSH/UFW hardening, and local/IP smoke checks. The fallback is not the
   final public product URL.

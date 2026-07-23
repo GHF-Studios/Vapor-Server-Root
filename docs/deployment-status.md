@@ -8,6 +8,7 @@ Last verified: 2026-07-23 Europe/Berlin.
 - Panel: none; Plesk is not used.
 - Reverse proxy: Caddy.
 - Service manager: systemd.
+- Automatic deployment: `vapor-deploy.timer` checks the configured branch.
 - Intended public host: `vapor.ghf-studios.site`.
 - Temporary pre-DNS access: HTTP fallback may be configured directly against the
   VPS while the domain registration is pending.
@@ -40,6 +41,7 @@ Vapor-Diagnostics-Server 7e08c425ac07bf65ebf16e9c993bf07362f49509
 - `vapor-docs.service` is active/running.
 - `vapor-identity.service` is active/running.
 - `vapor-diagnostics.service` is active/running.
+- `vapor-deploy.timer` is enabled for periodic deployment checks.
 - Local health checks return `ok` on ports 7111, 7112, 7113, and 7114.
 - Public pre-DNS HTTP health checks pass through the fallback route.
 - SSH remains reachable through key authentication after hardening.

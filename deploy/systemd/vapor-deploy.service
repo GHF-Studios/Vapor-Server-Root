@@ -1,0 +1,9 @@
+[Unit]
+Description=Deploy Vapor Server Root from configured branch
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+EnvironmentFile=-/etc/vapor-server/root.env
+ExecStart=/usr/bin/flock -n /run/vapor-server-deploy.lock /opt/vapor-server-root/deploy/scripts/deploy.sh

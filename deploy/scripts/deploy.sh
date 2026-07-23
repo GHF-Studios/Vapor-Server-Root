@@ -38,6 +38,7 @@ cargo build --release --locked \
 
 "${VAPOR_DEPLOY_ROOT}/deploy/scripts/install-systemd.sh"
 "${VAPOR_DEPLOY_ROOT}/deploy/scripts/install-caddy.sh"
+"${VAPOR_DEPLOY_ROOT}/deploy/scripts/install-auto-deploy.sh"
 
 systemctl restart vapor-homepage.service
 systemctl restart vapor-docs.service

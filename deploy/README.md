@@ -43,6 +43,8 @@ for smoke testing only; the intended public endpoint remains
   and create server-local env files.
 - `scripts/deploy.sh`: clone/update the root repo, update submodules, build
   services, install units/proxy config, and restart services.
+- `scripts/install-auto-deploy.sh`: install a systemd timer that periodically
+  runs `deploy.sh` against the configured branch.
 - `scripts/harden-vps.sh`: make SSH key-only explicit and enable UFW for
   SSH/HTTP/HTTPS.
 - `scripts/install-systemd.sh`: install/enable the four service units.
