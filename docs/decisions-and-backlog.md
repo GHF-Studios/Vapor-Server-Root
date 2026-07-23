@@ -55,7 +55,9 @@ while the implementation is still moving quickly.
 - Docs serves health, token-protected current-docs upload, and token-protected
   export scaffolds.
 - Identity serves health/status plus token-protected init/export scaffolds
-  backed by SQLite/SQLx schema bootstrap.
+  backed by SQLite/SQLx schema bootstrap. It now has fail-closed real-auth
+  verification seams for Steam Web API tickets and GitHub OAuth tokens plus a
+  read-only admin dashboard protected by server-local credentials.
 - Diagnostics accepts unauthenticated upload scaffolds and keeps list/download/
   export behind an admin token for now.
 - `Vapor-Server-Root` tracks the services as root-level submodules named after
@@ -92,6 +94,9 @@ while the implementation is still moving quickly.
 - Add real Steam identity verification using Steam session/auth tickets and
   server-side Steam WebAPI validation.
 - Add GitHub Device Flow for developer identity linking.
+- Configure server-local `VAPOR_IDENTITY_STEAM_WEB_API_KEY` and
+  `VAPOR_IDENTITY_GITHUB_CLIENT_ID` after the external Steam/GitHub app
+  credentials exist.
 - Define developer roles, initially at least `root` and `content-developer`.
 - Decide how Vapor Shell should wrap server REST APIs without making raw HTTP
   details the normal user workflow.

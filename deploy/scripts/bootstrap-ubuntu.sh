@@ -82,7 +82,14 @@ install_secret_env "${VAPOR_CONFIG_DIR}/identity.env" \
 "VAPOR_IDENTITY_BIND=127.0.0.1:7113
 VAPOR_IDENTITY_STATE=${VAPOR_STATE_ROOT}/identity
 VAPOR_IDENTITY_DB=${VAPOR_STATE_ROOT}/identity/identity.sqlite3
-VAPOR_IDENTITY_ADMIN_TOKEN=$(random_token)"
+VAPOR_IDENTITY_ADMIN_TOKEN=$(random_token)
+VAPOR_IDENTITY_DASHBOARD_PASSWORD=$(random_token)
+VAPOR_IDENTITY_STEAM_APP_ID=2122620
+VAPOR_IDENTITY_STEAM_AUTH_IDENTITY=vapor-identity
+# Set on the server when available; never commit the value:
+VAPOR_IDENTITY_STEAM_WEB_API_KEY=
+# Set after creating the GitHub OAuth/GitHub App registration:
+VAPOR_IDENTITY_GITHUB_CLIENT_ID="
 
 install_secret_env "${VAPOR_CONFIG_DIR}/diagnostics.env" \
 "VAPOR_DIAGNOSTICS_BIND=127.0.0.1:7114
