@@ -1,6 +1,6 @@
 [server_root]
 name = "Vapor Server Root"
-status = "service-scaffold"
+status = "pre-dns-deployed"
 public_domain = "vapor.ghf-studios.site"
 
 [deployment]
