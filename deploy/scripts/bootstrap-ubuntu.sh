@@ -59,6 +59,10 @@ install_dir "${VAPOR_USER}" "${VAPOR_GROUP}" 0750 "${VAPOR_STATE_ROOT}/identity"
 install_dir "${VAPOR_USER}" "${VAPOR_GROUP}" 0750 "${VAPOR_STATE_ROOT}/diagnostics"
 install_dir root "${VAPOR_GROUP}" 0750 "${VAPOR_CONFIG_DIR}"
 
+chown -R "${VAPOR_USER}:${VAPOR_GROUP}" "${VAPOR_STATE_ROOT}"
+find "${VAPOR_STATE_ROOT}" -type d -exec chmod 0750 {} +
+find "${VAPOR_STATE_ROOT}" -type f -exec chmod 0640 {} +
+
 install_secret_env "${VAPOR_CONFIG_DIR}/homepage.env" \
 "VAPOR_HOMEPAGE_BIND=127.0.0.1:7111"
 
