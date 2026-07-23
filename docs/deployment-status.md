@@ -30,7 +30,7 @@ commits in `Vapor-Server-Root` may be newer than the runtime-impacting commit
 recorded here.
 
 ```text
-Vapor-Server-Root       c559c91 Wire identity auth service config
+Vapor-Server-Root       14f0fa5 Make deploy workflow skip without secrets
 Vapor-Homepage-Server   a41aedc4180792d5561a8e3bf12a1383e172c1ea
 Vapor-Docs-Server       27518a45a1916678615620c5047de70296644ffe
 Vapor-Identity-Server   98c252e48c99412d0d952a1fb306b1238dd446c2
@@ -49,6 +49,8 @@ Vapor-Diagnostics-Server 7e08c425ac07bf65ebf16e9c993bf07362f49509
   against `main`.
 - Restricted deploy-user SSH can trigger `vapor-deploy.service`, and the
   resulting service run reports `success`.
+- GitHub Actions deploy workflow no-ops successfully until all deployment
+  secrets exist, avoiding failing Actions runs during setup.
 - Local health checks return `ok` on ports 7111, 7112, 7113, and 7114.
 - Public pre-DNS HTTP health checks pass through the fallback route.
 - `/etc/vapor-server/root.env` preserves non-secret deployment settings for
