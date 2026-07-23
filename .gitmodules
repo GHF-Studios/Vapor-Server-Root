@@ -1,0 +1,12 @@
+[submodule "services/homepage"]
+	path = services/homepage
+	url = https://github.com/GHF-Studios/Vapor-Homepage-Server.git
+[submodule "services/docs"]
+	path = services/docs
+	url = https://github.com/GHF-Studios/Vapor-Docs-Server.git
+[submodule "services/identity"]
+	path = services/identity
+	url = https://github.com/GHF-Studios/Vapor-Identity-Server.git
+[submodule "services/diagnostics"]
+	path = services/diagnostics
+	url = https://github.com/GHF-Studios/Vapor-Diagnostics-Server.git

@@ -1,0 +1,31 @@
+[server_root]
+name = "Vapor Server Root"
+status = "planning-scaffold"
+
+[[services]]
+id = "homepage"
+repo = "https://github.com/GHF-Studios/Vapor-Homepage-Server.git"
+path = "services/homepage"
+route = "/"
+state = "stateless"
+
+[[services]]
+id = "docs"
+repo = "https://github.com/GHF-Studios/Vapor-Docs-Server.git"
+path = "services/docs"
+route = "/docs/"
+state = "docs-artifacts"
+
+[[services]]
+id = "identity"
+repo = "https://github.com/GHF-Studios/Vapor-Identity-Server.git"
+path = "services/identity"
+route = "/api/identity/"
+state = "identity-registry"
+
+[[services]]
+id = "diagnostics"
+repo = "https://github.com/GHF-Studios/Vapor-Diagnostics-Server.git"
+path = "services/diagnostics"
+route = "/api/diagnostics/"
+state = "diagnostics-uploads"

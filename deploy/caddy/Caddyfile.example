@@ -1,0 +1,24 @@
+{
+	# Example only. Replace the domain during real deployment.
+	email admin@example.invalid
+}
+
+example.invalid {
+	encode zstd gzip
+
+	handle_path /docs/* {
+		reverse_proxy 127.0.0.1:7112
+	}
+
+	handle_path /api/identity/* {
+		reverse_proxy 127.0.0.1:7113
+	}
+
+	handle_path /api/diagnostics/* {
+		reverse_proxy 127.0.0.1:7114
+	}
+
+	handle {
+		reverse_proxy 127.0.0.1:7111
+	}
+}
