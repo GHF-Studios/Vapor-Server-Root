@@ -59,7 +59,7 @@ repo composes those into whole-conglomerate export/import.
 ## Current status
 
 Initial service scaffolds exist in the service repositories and are tracked here
-as deinitialized submodules. The root repo records deployment topology and
+as submodules under `services/`. The root repo records deployment topology and
 operations decisions, but does not own service business logic.
 
 See `docs/decisions-and-backlog.md` for the accepted boundaries, pending
