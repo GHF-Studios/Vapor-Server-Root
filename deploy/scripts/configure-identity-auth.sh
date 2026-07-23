@@ -16,6 +16,11 @@ Options:
   --prompt-steam-web-api-key      Prompt for Steam publisher Web API key.
   --github-client-id VALUE        Set GitHub OAuth/GitHub App client ID.
   --github-client-id-file PATH    Read GitHub client ID from file.
+  --github-client-secret VALUE    Set GitHub OAuth/GitHub App client secret.
+  --github-client-secret-file PATH
+                                  Read GitHub client secret from file.
+  --prompt-github-client-secret   Prompt for GitHub client secret.
+  --public-origin URL             Set public origin used for browser redirects.
   --cookie-secure true|false      Set whether dashboard cookies use Secure.
   --cookie-path PATH              Set dashboard cookie path. Default: /api/identity.
   --restart                       Restart vapor-identity.service after changes.
@@ -35,6 +40,10 @@ steam_web_api_key=""
 steam_web_api_key_set=false
 github_client_id=""
 github_client_id_set=false
+github_client_secret=""
+github_client_secret_set=false
+public_origin=""
+public_origin_set=false
 cookie_secure=""
 cookie_secure_set=false
 cookie_path=""
@@ -91,6 +100,24 @@ validate_cookie_path() {
   case "$value" in
     *";"*|*$'\n'*|*$'\r'*)
       echo "error: --cookie-path must not contain semicolons or newlines" >&2
+      exit 1
+      ;;
+  esac
+}
+
+validate_public_origin() {
+  local value="$1"
+  if [ "${value#http://}" = "$value" ] && [ "${value#https://}" = "$value" ]; then
+    echo "error: --public-origin must start with http:// or https://" >&2
+    exit 1
+  fi
+  if [ "${value%/}" != "$value" ]; then
+    echo "error: --public-origin must not end with /" >&2
+    exit 1
+  fi
+  case "$value" in
+    *";"*|*$'\n'*|*$'\r'*)
+      echo "error: --public-origin must not contain semicolons or newlines" >&2
       exit 1
       ;;
   esac
@@ -161,6 +188,31 @@ while [ "$#" -gt 0 ]; do
       github_client_id_set=true
       shift 2
       ;;
+    --github-client-secret)
+      [ "$#" -ge 2 ] || { echo "error: missing value for $1" >&2; exit 1; }
+      github_client_secret="$2"
+      github_client_secret_set=true
+      shift 2
+      ;;
+    --github-client-secret-file)
+      [ "$#" -ge 2 ] || { echo "error: missing value for $1" >&2; exit 1; }
+      github_client_secret="$(read_single_line_file "$2")"
+      github_client_secret_set=true
+      shift 2
+      ;;
+    --prompt-github-client-secret)
+      printf 'GitHub client secret: ' >&2
+      IFS= read -r -s github_client_secret
+      printf '\n' >&2
+      github_client_secret_set=true
+      shift
+      ;;
+    --public-origin)
+      [ "$#" -ge 2 ] || { echo "error: missing value for $1" >&2; exit 1; }
+      public_origin="$2"
+      public_origin_set=true
+      shift 2
+      ;;
     --cookie-secure)
       [ "$#" -ge 2 ] || { echo "error: missing value for $1" >&2; exit 1; }
       cookie_secure="$2"
@@ -210,6 +262,18 @@ if [ "$github_client_id_set" = true ]; then
   validate_env_value "GitHub client ID" "$github_client_id"
   set_env_var "VAPOR_IDENTITY_GITHUB_CLIENT_ID" "$github_client_id"
   echo "identity-auth: set VAPOR_IDENTITY_GITHUB_CLIENT_ID=${github_client_id}"
+fi
+
+if [ "$github_client_secret_set" = true ]; then
+  validate_env_value "GitHub client secret" "$github_client_secret"
+  set_env_var "VAPOR_IDENTITY_GITHUB_CLIENT_SECRET" "$github_client_secret"
+  echo "identity-auth: set VAPOR_IDENTITY_GITHUB_CLIENT_SECRET=<redacted>"
+fi
+
+if [ "$public_origin_set" = true ]; then
+  validate_public_origin "$public_origin"
+  set_env_var "VAPOR_IDENTITY_PUBLIC_ORIGIN" "$public_origin"
+  echo "identity-auth: set VAPOR_IDENTITY_PUBLIC_ORIGIN=${public_origin}"
 fi
 
 if [ "$cookie_secure_set" = true ]; then

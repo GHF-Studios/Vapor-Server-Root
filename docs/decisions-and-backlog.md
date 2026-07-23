@@ -25,6 +25,11 @@ while the implementation is still moving quickly.
 - Players should not require GitHub accounts.
 - Content/development workflows may require both Steam identity and GitHub
   identity because Vapor content is GitHub-backed for now.
+- The Steam account is the primary Vapor player profile anchor. GitHub attaches
+  to a Steam-anchored profile for development/root authorization; it should not
+  create a standalone player profile.
+- `root` is a privileged role/group on normal Steam-anchored profiles, not a
+  distinct account type.
 - Identity/auth concerns belong on the identity side. Other services should use
   identity-issued authorization later instead of inventing incompatible auth
   systems.
@@ -59,11 +64,13 @@ while the implementation is still moving quickly.
   export scaffolds.
 - Identity serves health/status plus token-protected init/export scaffolds
   backed by SQLite/SQLx schema bootstrap. It has fail-closed Steam Web API
-  ticket verification, GitHub OAuth token verification, GitHub Device Flow, and
-  a short-lived dashboard session model. The read-only admin dashboard only
-  renders identity data for a non-expired root profile session with linked Steam
-  and GitHub identities. The server-local admin token remains an operations
-  bootstrap tool, not the normal dashboard login model.
+  ticket verification, Steam OpenID browser login, GitHub OAuth token
+  verification, GitHub Device Flow, GitHub browser OAuth linking, and a
+  short-lived dashboard session model. The admin dashboard is publicly reachable
+  as a shell but only renders privileged identity data/actions for a non-expired
+  root profile session with linked Steam and GitHub identities. The server-local
+  admin token remains an operations bootstrap tool, not the normal dashboard
+  login model.
 - Diagnostics accepts unauthenticated upload scaffolds and keeps list/download/
   export behind an admin token for now.
 - `Vapor-Server-Root` tracks the services as root-level submodules named after
@@ -98,8 +105,8 @@ while the implementation is still moving quickly.
   identity is ready enough, but do not make identity a filesystem-registry
   prototype first.
 - Configure server-local `VAPOR_IDENTITY_STEAM_WEB_API_KEY` and
-  `VAPOR_IDENTITY_GITHUB_CLIENT_ID` after the external Steam/GitHub app
-  credentials exist.
+  `VAPOR_IDENTITY_GITHUB_CLIENT_ID`/`VAPOR_IDENTITY_GITHUB_CLIENT_SECRET` after
+  the external Steam/GitHub app credentials exist.
 - Exercise a real end-to-end root login after provider credentials are set:
   Steamworks/Vapor client obtains a Steam Web API ticket, GitHub Device Flow
   verifies GitHub identity, then `finish` issues a 5-minute root dashboard

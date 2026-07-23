@@ -89,10 +89,14 @@ VAPOR_IDENTITY_STEAM_AUTH_IDENTITY=vapor-identity
 VAPOR_IDENTITY_COOKIE_PATH=/api/identity
 # false is only for pre-DNS HTTP-by-IP smoke testing; set true after HTTPS.
 VAPOR_IDENTITY_COOKIE_SECURE=false
+# Optional stable origin for browser redirects, for example http://82.165.77.104
+# before DNS or https://vapor.ghf-studios.site after DNS:
+VAPOR_IDENTITY_PUBLIC_ORIGIN=
 # Set on the server when available; never commit the value:
 VAPOR_IDENTITY_STEAM_WEB_API_KEY=
 # Set after creating the GitHub OAuth/GitHub App registration:
-VAPOR_IDENTITY_GITHUB_CLIENT_ID="
+VAPOR_IDENTITY_GITHUB_CLIENT_ID=
+VAPOR_IDENTITY_GITHUB_CLIENT_SECRET="
 
 install_secret_env "${VAPOR_CONFIG_DIR}/diagnostics.env" \
 "VAPOR_DIAGNOSTICS_BIND=127.0.0.1:7114

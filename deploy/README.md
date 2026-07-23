@@ -50,7 +50,8 @@ for smoke testing only; the intended public endpoint remains
 - `scripts/install-github-actions-deploy-user.sh`: create a restricted deploy
   user for GitHub Actions to trigger `vapor-deploy.service`.
 - `scripts/configure-identity-auth.sh`: update server-local identity provider
-  configuration in `/etc/vapor-server/identity.env` without committing secrets.
+  configuration in `/etc/vapor-server/identity.env` without committing secrets,
+  including GitHub browser OAuth credentials and public redirect origin.
 - `scripts/export-state.sh`: create a root-only `.tar.gz` state bundle under
   `/var/backups/vapor-server` by default. The bundle includes
   `/var/lib/vapor-server` state and a manifest, not `/etc/vapor-server` secrets.

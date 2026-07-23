@@ -9,16 +9,16 @@ single-VPS identity service.
 
 Create either a GitHub OAuth app or GitHub App with Device Flow enabled.
 
-For the current CLI/operator flow, the identity server only needs the app's
-client ID. Do not configure or store a client secret for Device Flow unless a
-future browser callback flow explicitly needs it.
+For CLI/operator Device Flow, the identity server only needs the app's client
+ID. For browser login/linking, the identity server also needs the app's client
+secret stored server-side.
 
 Suggested initial values before DNS:
 
 ```text
 Application name: Vapor Identity
 Homepage URL: http://82.165.77.104/
-Authorization callback URL: http://82.165.77.104/api/identity/v1/auth/github/callback-placeholder
+Authorization callback URL: http://82.165.77.104/login/github/callback
 Device Flow: enabled
 ```
 
@@ -26,11 +26,10 @@ After DNS/HTTPS is live, update the public URLs to:
 
 ```text
 Homepage URL: https://vapor.ghf-studios.site/
-Authorization callback URL: https://vapor.ghf-studios.site/api/identity/v1/auth/github/callback-placeholder
+Authorization callback URL: https://vapor.ghf-studios.site/login/github/callback
 ```
 
-The callback route is currently only a registration placeholder; the deployed
-flow uses Device Flow.
+The deployed service supports both GitHub Device Flow and browser callback flow.
 
 ### Steam
 
@@ -47,7 +46,9 @@ Run this on the VPS after the external values exist:
 ```bash
 sudo /opt/vapor-server-root/deploy/scripts/configure-identity-auth.sh \
   --github-client-id <github-client-id> \
+  --prompt-github-client-secret \
   --prompt-steam-web-api-key \
+  --public-origin http://82.165.77.104 \
   --cookie-secure false \
   --cookie-path /api/identity \
   --restart \
@@ -55,13 +56,20 @@ sudo /opt/vapor-server-root/deploy/scripts/configure-identity-auth.sh \
 ```
 
 Use `--cookie-secure false` only for the temporary HTTP-by-IP phase. Switch to
-`--cookie-secure true` after DNS and HTTPS are verified.
+`--public-origin https://vapor.ghf-studios.site` and `--cookie-secure true`
+after DNS and HTTPS are verified.
 
 The script edits `/etc/vapor-server/identity.env`, keeps file permissions
 root-owned/restrictive, restarts `vapor-identity.service` when requested, and
 does not print the Steam key.
 
 ## Smoke-test the flow
+
+Browser login/register:
+
+```text
+http://82.165.77.104/login
+```
 
 GitHub-only readiness smoke:
 
@@ -89,7 +97,7 @@ not print provider tokens or dashboard cookies.
 
 - Steam proof still needs a Steamworks/Vapor client command that can call
   `GetAuthTicketForWebApi` and pass the ticket hex into the smoke/login flow.
-- The dashboard has an API/session gate, but not a polished browser login UI.
+- The dashboard has a functional browser login shell, but not a polished UI.
 - `content-developer` role assignment is not exposed through a dedicated admin
   route yet.
 - Temporary HTTP-by-IP cookies are not `Secure`. This must change after HTTPS.

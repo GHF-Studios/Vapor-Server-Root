@@ -13,6 +13,18 @@
 		reverse_proxy 127.0.0.1:7114
 	}
 
+	handle /login* {
+		reverse_proxy 127.0.0.1:7113
+	}
+
+	handle /logout {
+		reverse_proxy 127.0.0.1:7113
+	}
+
+	handle /admin* {
+		reverse_proxy 127.0.0.1:7113
+	}
+
 	handle {
 		reverse_proxy 127.0.0.1:7111
 	}

@@ -18,5 +18,7 @@ curl --fail --silent --show-error "${base}/healthz" >/dev/null
 curl --fail --silent --show-error "${base}/docs/healthz" >/dev/null
 curl --fail --silent --show-error "${base}/api/identity/healthz" >/dev/null
 curl --fail --silent --show-error "${base}/api/diagnostics/healthz" >/dev/null
+curl --fail --silent --show-error "${base}/login" >/dev/null
+curl --fail --silent --show-error "${base}/admin" >/dev/null
 
 echo "public-http: health checks passed for ${base}"

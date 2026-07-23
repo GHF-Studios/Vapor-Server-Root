@@ -33,6 +33,8 @@ root repo owns orchestration, not service business logic.
 ```text
 /                         -> homepage
 /docs/                    -> docs
+/login                    -> identity browser login/register
+/admin                    -> identity admin dashboard shell
 /api/identity/            -> identity
 /api/diagnostics/         -> diagnostics
 ```
