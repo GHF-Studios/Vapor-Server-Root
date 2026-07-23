@@ -5,18 +5,21 @@ SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 
 usage() {
   cat >&2 <<'USAGE'
-usage: publish-vapor-root-docs.sh --vapor-root PATH --host HOST [--user USER] [--ssh-key PATH] [--ssh-option OPTION]
+usage: deploy-vapor-root-docs.sh --vapor-root PATH --base-url URL [--token-env NAME] [--token-file PATH]
 
-Builds the curated Vapor-Root docs bundle and uploads it to the Vapor docs
-service over SSH.
+Builds the curated Vapor-Root docs bundle and deploys it to the public Vapor
+docs route over HTTP.
+
+Before DNS is ready, use:
+
+  --base-url http://82.165.77.104/docs
 USAGE
 }
 
 VAPOR_ROOT=""
-HOST=""
-SSH_USER="root"
-SSH_KEY=""
-SSH_OPTIONS=()
+BASE_URL=""
+TOKEN_ENV="VAPOR_DOCS_ADMIN_TOKEN"
+TOKEN_FILE=""
 
 while [ "$#" -gt 0 ]; do
   case "$1" in
@@ -28,36 +31,28 @@ while [ "$#" -gt 0 ]; do
       VAPOR_ROOT="$2"
       shift 2
       ;;
-    --host)
+    --base-url)
       if [ "$#" -lt 2 ]; then
         usage
         exit 2
       fi
-      HOST="$2"
+      BASE_URL="$2"
       shift 2
       ;;
-    --user)
+    --token-env)
       if [ "$#" -lt 2 ]; then
         usage
         exit 2
       fi
-      SSH_USER="$2"
+      TOKEN_ENV="$2"
       shift 2
       ;;
-    --ssh-key)
+    --token-file)
       if [ "$#" -lt 2 ]; then
         usage
         exit 2
       fi
-      SSH_KEY="$2"
-      shift 2
-      ;;
-    --ssh-option)
-      if [ "$#" -lt 2 ]; then
-        usage
-        exit 2
-      fi
-      SSH_OPTIONS+=("$2")
+      TOKEN_FILE="$2"
       shift 2
       ;;
     -h|--help)
@@ -71,7 +66,7 @@ while [ "$#" -gt 0 ]; do
   esac
 done
 
-if [ -z "${VAPOR_ROOT}" ] || [ -z "${HOST}" ]; then
+if [ -z "${VAPOR_ROOT}" ] || [ -z "${BASE_URL}" ]; then
   usage
   exit 2
 fi
@@ -88,14 +83,11 @@ trap cleanup EXIT
 
 UPLOAD_ARGS=(
   --bundle "${BUNDLE}"
-  --host "${HOST}"
-  --user "${SSH_USER}"
+  --base-url "${BASE_URL}"
+  --token-env "${TOKEN_ENV}"
 )
-if [ -n "${SSH_KEY}" ]; then
-  UPLOAD_ARGS+=(--ssh-key "${SSH_KEY}")
+if [ -n "${TOKEN_FILE}" ]; then
+  UPLOAD_ARGS+=(--token-file "${TOKEN_FILE}")
 fi
-for option in "${SSH_OPTIONS[@]}"; do
-  UPLOAD_ARGS+=(--ssh-option "${option}")
-done
 
-"${SCRIPT_DIR}/upload-docs-via-ssh.sh" "${UPLOAD_ARGS[@]}"
+"${SCRIPT_DIR}/upload-docs-via-http.sh" "${UPLOAD_ARGS[@]}"

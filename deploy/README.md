@@ -66,7 +66,9 @@ for smoke testing only; the intended public endpoint remains
   obvious secret redaction.
 - `scripts/build-vapor-root-docs-bundle.sh`: build a curated Vapor docs tar.gz
   bundle from a local `Vapor-Root` checkout.
-- `scripts/upload-docs-via-ssh.sh`: upload a docs bundle over SSH so the docs
-  admin token stays server-local.
-- `scripts/publish-vapor-root-docs.sh`: build and upload the curated docs
-  bundle in one operator command.
+- `scripts/upload-docs-via-http.sh`: upload a docs bundle to the public docs
+  route, such as `http://82.165.77.104/docs` before DNS is ready.
+- `scripts/upload-docs-via-ssh.sh`: alternate upload path that posts from the
+  VPS to the local docs service.
+- `scripts/deploy-vapor-root-docs.sh`: build and deploy the curated docs bundle
+  in one operator command.

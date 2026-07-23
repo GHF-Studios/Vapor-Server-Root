@@ -88,7 +88,7 @@ while the implementation is still moving quickly.
   state that should be queryable.
 - Evolve export/import bundle formats for docs, identity, and diagnostics beyond
   the initial root-level file-state bundle.
-- Add docs deployment from a Vapor-owned/root-owned publish workflow.
+- Add docs deployment from a Vapor-owned/root-owned deploy workflow.
 - Define diagnostics upload request schema, redaction contract, size limits,
   retention policy, and root-dev download/export flow.
 - Replace placeholder admin tokens with identity-backed authorization once
