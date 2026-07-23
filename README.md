@@ -75,3 +75,6 @@ See `docs/deployment-status.md` for the latest recorded VPS deployment status.
 
 See `docs/identity-auth-runbook.md` for Steam/GitHub identity provider
 configuration and auth-flow smoke testing.
+
+See `docs/steam-authority-model.md` for the distinction between Steam browser
+identity, Steamworks/WebAPI verification, Vapor roles, and publishing authority.

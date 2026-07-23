@@ -30,6 +30,10 @@ while the implementation is still moving quickly.
   create a standalone player profile.
 - `root` is a privileged role/group on normal Steam-anchored profiles, not a
   distinct account type.
+- Steam browser identity, Steamworks/WebAPI verification, Vapor roles, and
+  publishing authority are separate layers. OpenID is sufficient for browser
+  identity, but developer/root publishing paths need stronger Steam/Vapor
+  authority checks.
 - Identity/auth concerns belong on the identity side. Other services should use
   identity-issued authorization later instead of inventing incompatible auth
   systems.
@@ -111,6 +115,9 @@ while the implementation is still moving quickly.
   Steamworks/Vapor client obtains a Steam Web API ticket, GitHub Device Flow
   verifies GitHub identity, then `finish` issues a 5-minute root dashboard
   session.
+- Define the secure publishing authority model for Workshop publishing and
+  root app/server publishing. Root/admin implies developer capability, but
+  Steam-side publishing still needs appropriate Steamworks/pipeline authority.
 - Move pre-DNS HTTP cookie config to HTTPS-only secure cookies once DNS and
   certificate issuance are live.
 - Define developer roles, initially at least `root` and `content-developer`.
