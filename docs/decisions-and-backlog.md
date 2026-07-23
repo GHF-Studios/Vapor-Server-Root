@@ -31,6 +31,12 @@ while the implementation is still moving quickly.
 - Server state must be restorable service-by-service and as a composed whole:
   empty initialization, export, import, and rebuild-from-source are first-class
   operational goals.
+- The current deployment direction is direct Linux service hosting with Caddy
+  and systemd. Plesk is not required for the Vapor server MVP unless explicitly
+  chosen later.
+- If deploying without Plesk, Ubuntu 26.04 LTS is an acceptable baseline. If
+  deploying with Plesk, use the latest Plesk-supported Ubuntu LTS instead of
+  Ubuntu 26.04 until Plesk support catches up.
 
 ## Current scaffold behavior
 
@@ -46,7 +52,7 @@ while the implementation is still moving quickly.
 
 ## Near-term backlog
 
-- Decide the VPS baseline OS and provisioning model.
+- Finalize the VPS provisioning model around direct Caddy/systemd deployment.
 - Decide the public domain name and final Caddy route configuration.
 - Add root-level bootstrap/rebuild scripts once the VPS target is chosen.
 - Add systemd unit templates for the four service binaries.
