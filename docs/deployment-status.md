@@ -27,7 +27,7 @@ commits in `Vapor-Server-Root` may be newer than the runtime-impacting commit
 recorded here.
 
 ```text
-Vapor-Server-Root       6996ba9 Add automatic deploy timer
+Vapor-Server-Root       1088d56 Add server state export restore scripts
 Vapor-Homepage-Server   a41aedc4180792d5561a8e3bf12a1383e172c1ea
 Vapor-Docs-Server       f969ed4669e1bfa7637cc1f1afb3f61e1f4735a3
 Vapor-Identity-Server   08715c4d6f85cf6daa2a24505dd4fa36fa0e404f
@@ -57,6 +57,9 @@ Vapor-Diagnostics-Server 7e08c425ac07bf65ebf16e9c993bf07362f49509
   endpoint.
 - A diagnostics smoke run was uploaded and verified to redact obvious secret
   tokens on disk.
+- A root-only state export bundle was created under `/var/backups/vapor-server`
+  and verified to contain `/var/lib/vapor-server` state plus a manifest, while
+  excluding `/etc/vapor-server` env/token files.
 
 ## Remaining external dependency
 
