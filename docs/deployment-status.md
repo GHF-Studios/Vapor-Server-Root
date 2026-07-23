@@ -30,10 +30,10 @@ commits in `Vapor-Server-Root` may be newer than the runtime-impacting commit
 recorded here.
 
 ```text
-Vapor-Server-Root       2feb0f988e41a1291a0b93acecff9fe063516590
+Vapor-Server-Root       ef8c7da
 Vapor-Homepage-Server   a41aedc4180792d5561a8e3bf12a1383e172c1ea
 Vapor-Docs-Server       27518a45a1916678615620c5047de70296644ffe
-Vapor-Identity-Server   e2e039efebc26374c6ee1d2c140bd9ecb799f2e9
+Vapor-Identity-Server   0767f86
 Vapor-Diagnostics-Server 7e08c425ac07bf65ebf16e9c993bf07362f49509
 ```
 
@@ -62,17 +62,24 @@ Vapor-Diagnostics-Server 7e08c425ac07bf65ebf16e9c993bf07362f49509
   permissions.
 - Identity auth readiness endpoint is deployed. Steam and GitHub verification
   endpoints fail closed until server-local external credentials are configured.
-- Identity has 5-minute auth attempts and 5-minute dashboard sessions. The
-  read-only admin dashboard returns `401` with no profile data unless the
-  request carries a non-expired root session for a profile with linked Steam and
-  GitHub identities plus the `root` role.
+- Top-level `/login`, `/logout`, and `/admin` routes are routed to the identity
+  service. `/login` is the browser login/register page. `/admin` is publicly
+  reachable as a locked shell.
+- Identity has Steam-anchored browser profiles through Steam OpenID, GitHub
+  browser OAuth linking stubs, GitHub Device Flow/API seams, 5-minute auth
+  attempts, and 5-minute dashboard sessions. The dashboard only renders
+  privileged identity data/actions when the request carries a non-expired root
+  session for a profile with linked Steam and GitHub identities plus the `root`
+  role.
+- `root` is a role/group on normal Steam-anchored profiles, not a separate
+  account type. GitHub does not create standalone player profiles.
 - The old server-local dashboard password remains present in
   `/etc/vapor-server/identity.env` for compatibility/readiness visibility, but
   it is no longer the dashboard authorization model.
 - Temporary HTTP-by-IP identity cookies are explicitly configured with
-  `VAPOR_IDENTITY_COOKIE_SECURE=false` and
-  `VAPOR_IDENTITY_COOKIE_PATH=/api/identity`. Move this to secure HTTPS cookies
-  once DNS is active.
+  `VAPOR_IDENTITY_PUBLIC_ORIGIN=http://82.165.77.104`,
+  `VAPOR_IDENTITY_COOKIE_SECURE=false`, and `VAPOR_IDENTITY_COOKIE_PATH=/`.
+  Move this to secure HTTPS cookies once DNS is active.
 - `deploy/scripts/configure-identity-auth.sh` and
   `deploy/scripts/smoke-identity-auth.sh` are deployed on the VPS.
 - Curated Vapor docs are deployed through the public HTTP docs route: 410 files,
