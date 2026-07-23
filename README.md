@@ -64,3 +64,5 @@ own service business logic.
 
 See `docs/decisions-and-backlog.md` for the accepted boundaries, pending
 decisions, and future/backburner items that should not be lost.
+
+See `docs/deployment-status.md` for the latest recorded VPS deployment status.
