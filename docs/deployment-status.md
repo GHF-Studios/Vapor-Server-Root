@@ -18,6 +18,10 @@ server-local env files under `/etc/vapor-server`.
 
 ## Verified deployed source
 
+These are the runtime/service commits verified on the VPS. Documentation-only
+commits in `Vapor-Server-Root` may be newer than the runtime-impacting commit
+recorded here.
+
 ```text
 Vapor-Server-Root       9224c18 Tighten VPS service state permissions
 Vapor-Homepage-Server   a41aedc4180792d5561a8e3bf12a1383e172c1ea
