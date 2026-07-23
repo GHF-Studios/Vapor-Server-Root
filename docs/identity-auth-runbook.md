@@ -50,7 +50,7 @@ sudo /opt/vapor-server-root/deploy/scripts/configure-identity-auth.sh \
   --prompt-steam-web-api-key \
   --public-origin http://82.165.77.104 \
   --cookie-secure false \
-  --cookie-path /api/identity \
+  --cookie-path / \
   --restart \
   --status
 ```

@@ -22,7 +22,7 @@ Options:
   --prompt-github-client-secret   Prompt for GitHub client secret.
   --public-origin URL             Set public origin used for browser redirects.
   --cookie-secure true|false      Set whether dashboard cookies use Secure.
-  --cookie-path PATH              Set dashboard cookie path. Default: /api/identity.
+  --cookie-path PATH              Set dashboard cookie path. Default: /.
   --restart                       Restart vapor-identity.service after changes.
   --status                        Print local identity auth readiness after changes.
   -h, --help                      Show this help.

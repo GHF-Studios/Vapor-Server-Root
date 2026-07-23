@@ -86,7 +86,7 @@ VAPOR_IDENTITY_ADMIN_TOKEN=$(random_token)
 VAPOR_IDENTITY_DASHBOARD_PASSWORD=$(random_token)
 VAPOR_IDENTITY_STEAM_APP_ID=2122620
 VAPOR_IDENTITY_STEAM_AUTH_IDENTITY=vapor-identity
-VAPOR_IDENTITY_COOKIE_PATH=/api/identity
+VAPOR_IDENTITY_COOKIE_PATH=/
 # false is only for pre-DNS HTTP-by-IP smoke testing; set true after HTTPS.
 VAPOR_IDENTITY_COOKIE_SECURE=false
 # Optional stable origin for browser redirects, for example http://82.165.77.104
