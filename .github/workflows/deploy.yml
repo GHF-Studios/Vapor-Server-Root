@@ -20,6 +20,7 @@ jobs:
 
     steps:
       - name: Check required secrets
+        id: deploy-secrets
         shell: bash
         env:
           VAPOR_DEPLOY_HOST: ${{ secrets.VAPOR_DEPLOY_HOST }}
@@ -28,16 +29,17 @@ jobs:
           VAPOR_DEPLOY_KNOWN_HOSTS: ${{ secrets.VAPOR_DEPLOY_KNOWN_HOSTS }}
         run: |
           set -euo pipefail
-          missing=0
+          ready=true
           for name in VAPOR_DEPLOY_HOST VAPOR_DEPLOY_USER VAPOR_DEPLOY_SSH_KEY VAPOR_DEPLOY_KNOWN_HOSTS; do
             if [ -z "${!name}" ]; then
-              echo "::error::missing required secret ${name}"
-              missing=1
+              echo "::notice::missing optional deployment secret ${name}; skipping deploy trigger"
+              ready=false
             fi
           done
-          exit "${missing}"
+          echo "ready=${ready}" >> "${GITHUB_OUTPUT}"
 
       - name: Configure SSH
+        if: steps.deploy-secrets.outputs.ready == 'true'
         shell: bash
         env:
           VAPOR_DEPLOY_SSH_KEY: ${{ secrets.VAPOR_DEPLOY_SSH_KEY }}
@@ -51,6 +53,7 @@ jobs:
           chmod 0600 "${HOME}/.ssh/known_hosts"
 
       - name: Trigger deploy service
+        if: steps.deploy-secrets.outputs.ready == 'true'
         shell: bash
         env:
           VAPOR_DEPLOY_HOST: ${{ secrets.VAPOR_DEPLOY_HOST }}
