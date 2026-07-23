@@ -30,10 +30,10 @@ commits in `Vapor-Server-Root` may be newer than the runtime-impacting commit
 recorded here.
 
 ```text
-Vapor-Server-Root       ef8c7da
+Vapor-Server-Root       0a79b7c
 Vapor-Homepage-Server   a41aedc4180792d5561a8e3bf12a1383e172c1ea
 Vapor-Docs-Server       27518a45a1916678615620c5047de70296644ffe
-Vapor-Identity-Server   0767f86
+Vapor-Identity-Server   b8b1671
 Vapor-Diagnostics-Server 7e08c425ac07bf65ebf16e9c993bf07362f49509
 ```
 
@@ -71,6 +71,9 @@ Vapor-Diagnostics-Server 7e08c425ac07bf65ebf16e9c993bf07362f49509
   privileged identity data/actions when the request carries a non-expired root
   session for a profile with linked Steam and GitHub identities plus the `root`
   role.
+- Identity source has been split out of the previous monolithic `main.rs` into
+  focused modules for config, route handlers, persistence, provider
+  verification, profile/session logic, and shared utilities.
 - `root` is a role/group on normal Steam-anchored profiles, not a separate
   account type. GitHub does not create standalone player profiles.
 - The old server-local dashboard password remains present in
