@@ -47,6 +47,12 @@ for smoke testing only; the intended public endpoint remains
   runs `deploy.sh` against the configured branch.
 - `scripts/harden-vps.sh`: make SSH key-only explicit and enable UFW for
   SSH/HTTP/HTTPS.
+- `scripts/export-state.sh`: create a root-only `.tar.gz` state bundle under
+  `/var/backups/vapor-server` by default. The bundle includes
+  `/var/lib/vapor-server` state and a manifest, not `/etc/vapor-server` secrets.
+- `scripts/restore-state.sh`: restore a bundle created by `export-state.sh`
+  onto an already bootstrapped server; requires `--yes` and moves prior state
+  aside before replacing it.
 - `scripts/install-systemd.sh`: install/enable the four service units.
 - `scripts/install-caddy.sh`: render/install the Caddy config.
 - `scripts/health-check.sh`: check local service health endpoints.
