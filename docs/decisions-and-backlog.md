@@ -58,9 +58,12 @@ while the implementation is still moving quickly.
 - Docs serves health, token-protected current-docs upload, and token-protected
   export scaffolds.
 - Identity serves health/status plus token-protected init/export scaffolds
-  backed by SQLite/SQLx schema bootstrap. It now has fail-closed real-auth
-  verification seams for Steam Web API tickets and GitHub OAuth tokens plus a
-  read-only admin dashboard protected by server-local credentials.
+  backed by SQLite/SQLx schema bootstrap. It has fail-closed Steam Web API
+  ticket verification, GitHub OAuth token verification, GitHub Device Flow, and
+  a short-lived dashboard session model. The read-only admin dashboard only
+  renders identity data for a non-expired root profile session with linked Steam
+  and GitHub identities. The server-local admin token remains an operations
+  bootstrap tool, not the normal dashboard login model.
 - Diagnostics accepts unauthenticated upload scaffolds and keeps list/download/
   export behind an admin token for now.
 - `Vapor-Server-Root` tracks the services as root-level submodules named after
@@ -94,12 +97,15 @@ while the implementation is still moving quickly.
 - Replace placeholder admin tokens with identity-backed authorization once
   identity is ready enough, but do not make identity a filesystem-registry
   prototype first.
-- Add real Steam identity verification using Steam session/auth tickets and
-  server-side Steam WebAPI validation.
-- Add GitHub Device Flow for developer identity linking.
 - Configure server-local `VAPOR_IDENTITY_STEAM_WEB_API_KEY` and
   `VAPOR_IDENTITY_GITHUB_CLIENT_ID` after the external Steam/GitHub app
   credentials exist.
+- Exercise a real end-to-end root login after provider credentials are set:
+  Steamworks/Vapor client obtains a Steam Web API ticket, GitHub Device Flow
+  verifies GitHub identity, then `finish` issues a 5-minute root dashboard
+  session.
+- Move pre-DNS HTTP cookie config to HTTPS-only secure cookies once DNS and
+  certificate issuance are live.
 - Define developer roles, initially at least `root` and `content-developer`.
 - Decide how Vapor Shell should wrap server REST APIs without making raw HTTP
   details the normal user workflow.
@@ -109,8 +115,6 @@ while the implementation is still moving quickly.
 ## Explicitly not current scope
 
 - Plesk setup.
-- Steam account linking implementation.
-- GitHub Device Flow implementation.
 - Server-mediated Steam publishing credentials.
 - A dashboard or launcher GUI.
 - MCP/ACP capability integration.

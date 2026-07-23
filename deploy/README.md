@@ -49,6 +49,8 @@ for smoke testing only; the intended public endpoint remains
   SSH/HTTP/HTTPS.
 - `scripts/install-github-actions-deploy-user.sh`: create a restricted deploy
   user for GitHub Actions to trigger `vapor-deploy.service`.
+- `scripts/configure-identity-auth.sh`: update server-local identity provider
+  configuration in `/etc/vapor-server/identity.env` without committing secrets.
 - `scripts/export-state.sh`: create a root-only `.tar.gz` state bundle under
   `/var/backups/vapor-server` by default. The bundle includes
   `/var/lib/vapor-server` state and a manifest, not `/etc/vapor-server` secrets.
@@ -60,6 +62,8 @@ for smoke testing only; the intended public endpoint remains
 - `scripts/health-check.sh`: check local service health endpoints.
 - `scripts/public-http-check.sh`: check public HTTP routes before DNS/HTTPS is
   ready.
+- `scripts/smoke-identity-auth.sh`: exercise the identity auth-attempt flow,
+  including GitHub Device Flow and optional Steam ticket/root bootstrap.
 - `scripts/smoke-docs-upload.sh`: upload a placeholder docs page through the
   token-protected docs endpoint.
 - `scripts/smoke-diagnostics.sh`: upload a diagnostics smoke run and verify
