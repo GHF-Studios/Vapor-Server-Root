@@ -9,9 +9,9 @@ Rules:
   credentials.
 - Keep homepage, docs, identity, and diagnostics as separate service concerns.
 - Do not fold service business logic into this root repo.
-- Keep the service repositories checked out as submodules under `services/` for
-  normal local development. Do not maintain separate sibling checkouts as the
-  normal workspace shape.
+- Keep the service repositories checked out as root-level submodules named after
+  their repositories, matching the `Vapor-Root` workspace shape. Do not maintain
+  separate sibling checkouts as the normal workspace shape.
 - Prefer path routing through one public domain.
 - Preserve independent rebuild/deploy of each service.
 - Preserve whole-system export/import as a composed operation.

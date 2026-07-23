@@ -5,27 +5,27 @@ status = "service-scaffold"
 [[services]]
 id = "homepage"
 repo = "https://github.com/GHF-Studios/Vapor-Homepage-Server.git"
-path = "services/homepage"
+path = "Vapor-Homepage-Server"
 route = "/"
 state = "stateless"
 
 [[services]]
 id = "docs"
 repo = "https://github.com/GHF-Studios/Vapor-Docs-Server.git"
-path = "services/docs"
+path = "Vapor-Docs-Server"
 route = "/docs/"
 state = "docs-artifacts"
 
 [[services]]
 id = "identity"
 repo = "https://github.com/GHF-Studios/Vapor-Identity-Server.git"
-path = "services/identity"
+path = "Vapor-Identity-Server"
 route = "/api/identity/"
 state = "identity-registry"
 
 [[services]]
 id = "diagnostics"
 repo = "https://github.com/GHF-Studios/Vapor-Diagnostics-Server.git"
-path = "services/diagnostics"
+path = "Vapor-Diagnostics-Server"
 route = "/api/diagnostics/"
 state = "diagnostics-uploads"

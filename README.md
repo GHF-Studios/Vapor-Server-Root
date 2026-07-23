@@ -8,11 +8,10 @@ submodule of the game/app root.
 
 ```text
 Vapor-Server-Root/
-  services/
-    homepage/      -> Vapor-Homepage-Server
-    docs/          -> Vapor-Docs-Server
-    identity/      -> Vapor-Identity-Server
-    diagnostics/   -> Vapor-Diagnostics-Server
+  Vapor-Homepage-Server/      -> Vapor-Homepage-Server
+  Vapor-Docs-Server/          -> Vapor-Docs-Server
+  Vapor-Identity-Server/      -> Vapor-Identity-Server
+  Vapor-Diagnostics-Server/   -> Vapor-Diagnostics-Server
 
   deploy/
     caddy/
@@ -59,7 +58,7 @@ repo composes those into whole-conglomerate export/import.
 ## Current status
 
 Initial service scaffolds exist in the service repositories and are tracked here
-as submodules under `services/`. The root repo records deployment topology and
+as root-level submodules. The root repo records deployment topology and
 operations decisions, but does not own service business logic.
 
 See `docs/decisions-and-backlog.md` for the accepted boundaries, pending

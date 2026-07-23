@@ -40,9 +40,9 @@ while the implementation is still moving quickly.
 - Identity serves health/status plus token-protected init/export scaffolds.
 - Diagnostics accepts unauthenticated upload scaffolds and keeps list/download/
   export behind an admin token for now.
-- `Vapor-Server-Root` tracks the services as submodules under `services/`.
-  Normal local development should use those submodule worktrees, not separate
-  sibling checkouts.
+- `Vapor-Server-Root` tracks the services as root-level submodules named after
+  their repositories. Normal local development should use those submodule
+  worktrees, not separate sibling checkouts.
 
 ## Near-term backlog
 
