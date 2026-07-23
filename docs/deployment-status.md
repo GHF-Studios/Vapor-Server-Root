@@ -9,6 +9,9 @@ Last verified: 2026-07-23 Europe/Berlin.
 - Reverse proxy: Caddy.
 - Service manager: systemd.
 - Automatic deployment: `vapor-deploy.timer` checks the configured branch.
+- GitHub deployment trigger plumbing exists; a restricted VPS deploy user is
+  installed, but GitHub repository secrets/branch protection are not configured
+  yet.
 - Intended public host: `vapor.ghf-studios.site`.
 - Temporary pre-DNS access: HTTP fallback may be configured directly against the
   VPS while the domain registration is pending.
@@ -44,6 +47,8 @@ Vapor-Diagnostics-Server 7e08c425ac07bf65ebf16e9c993bf07362f49509
 - `vapor-deploy.timer` is enabled for periodic deployment checks.
 - The first timer-triggered `vapor-deploy.service` run completed successfully
   against `main`.
+- Restricted deploy-user SSH can trigger `vapor-deploy.service`, and the
+  resulting service run reports `success`.
 - Local health checks return `ok` on ports 7111, 7112, 7113, and 7114.
 - Public pre-DNS HTTP health checks pass through the fallback route.
 - `/etc/vapor-server/root.env` preserves non-secret deployment settings for
