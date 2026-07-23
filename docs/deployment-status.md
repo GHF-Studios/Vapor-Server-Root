@@ -30,7 +30,7 @@ commits in `Vapor-Server-Root` may be newer than the runtime-impacting commit
 recorded here.
 
 ```text
-Vapor-Server-Root       14f0fa5 Make deploy workflow skip without secrets
+Vapor-Server-Root       3674516 Use deploy naming for docs web rollout
 Vapor-Homepage-Server   a41aedc4180792d5561a8e3bf12a1383e172c1ea
 Vapor-Docs-Server       27518a45a1916678615620c5047de70296644ffe
 Vapor-Identity-Server   a5426d1b3b2e861fca343cdd11202a5751eb5a09
