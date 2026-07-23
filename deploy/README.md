@@ -47,6 +47,8 @@ for smoke testing only; the intended public endpoint remains
   runs `deploy.sh` against the configured branch.
 - `scripts/harden-vps.sh`: make SSH key-only explicit and enable UFW for
   SSH/HTTP/HTTPS.
+- `scripts/install-github-actions-deploy-user.sh`: create a restricted deploy
+  user for GitHub Actions to trigger `vapor-deploy.service`.
 - `scripts/export-state.sh`: create a root-only `.tar.gz` state bundle under
   `/var/backups/vapor-server` by default. The bundle includes
   `/var/lib/vapor-server` state and a manifest, not `/etc/vapor-server` secrets.

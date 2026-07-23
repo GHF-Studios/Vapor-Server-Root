@@ -48,6 +48,9 @@ while the implementation is still moving quickly.
   that justify the extra service.
 - Automatic deployment should follow a real branch-based path. The initial
   target branch is `main` unless a dedicated deployment branch is introduced.
+- GitHub-triggered deployment should trigger the VPS-owned deploy service rather
+  than moving server secrets into GitHub Actions. A dedicated restricted deploy
+  SSH user is preferred over using the root SSH key.
 
 ## Current scaffold behavior
 
@@ -100,6 +103,8 @@ while the implementation is still moving quickly.
 - Define developer roles, initially at least `root` and `content-developer`.
 - Decide how Vapor Shell should wrap server REST APIs without making raw HTTP
   details the normal user workflow.
+- Configure GitHub branch protection and repository Actions secrets once a valid
+  GitHub admin session is available.
 
 ## Explicitly not current scope
 
