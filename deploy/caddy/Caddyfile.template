@@ -1,4 +1,4 @@
-{{VAPOR_DOMAIN}} {
+(vapor_routes) {
 	encode zstd gzip
 
 	handle_path /docs/* {
@@ -16,4 +16,10 @@
 	handle {
 		reverse_proxy 127.0.0.1:7111
 	}
+}
+
+{{VAPOR_HTTP_FALLBACK_BLOCK}}
+
+{{VAPOR_DOMAIN}} {
+	import vapor_routes
 }

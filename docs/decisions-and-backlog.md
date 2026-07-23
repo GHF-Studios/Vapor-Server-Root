@@ -64,6 +64,9 @@ while the implementation is still moving quickly.
 - `Vapor-Server-Root` now contains first-pass direct VPS deployment automation:
   Ubuntu bootstrap, root-repo deploy, Caddy config installation, systemd unit
   installation, and local health checks.
+- Domain-independent pre-DNS work is allowed through temporary HTTP fallback
+  routing, SSH/UFW hardening, and local/IP smoke checks. The fallback is not the
+  final public product URL.
 
 ## Near-term backlog
 
@@ -71,6 +74,7 @@ while the implementation is still moving quickly.
   deployment.
 - Wire DNS for `vapor.ghf-studios.site` once the domain is active.
 - Finalize the Caddy route configuration for `vapor.ghf-studios.site`.
+- Remove the pre-DNS IP/HTTP fallback once DNS and HTTPS are verified.
 - Add restore/import/export orchestration scripts.
 - Add SQLite migration/bootstrap handling for identity and any service-owned
   state that should be queryable.

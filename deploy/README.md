@@ -32,12 +32,25 @@ operations: package installation, system user creation, systemd unit
 installation, Caddy configuration, source checkout/update, service build, and
 service restart.
 
+Before DNS is active, a temporary HTTP-only fallback can be rendered by setting
+`VAPOR_HTTP_FALLBACK_HOST` when installing Caddy or running `deploy.sh`. This is
+for smoke testing only; the intended public endpoint remains
+`https://vapor.ghf-studios.site/` after DNS and certificate issuance work.
+
 ## Scripts
 
 - `scripts/bootstrap-ubuntu.sh`: install OS packages, create users/directories,
   and create server-local env files.
 - `scripts/deploy.sh`: clone/update the root repo, update submodules, build
   services, install units/proxy config, and restart services.
+- `scripts/harden-vps.sh`: make SSH key-only explicit and enable UFW for
+  SSH/HTTP/HTTPS.
 - `scripts/install-systemd.sh`: install/enable the four service units.
 - `scripts/install-caddy.sh`: render/install the Caddy config.
 - `scripts/health-check.sh`: check local service health endpoints.
+- `scripts/public-http-check.sh`: check public HTTP routes before DNS/HTTPS is
+  ready.
+- `scripts/smoke-docs-upload.sh`: upload a placeholder docs page through the
+  token-protected docs endpoint.
+- `scripts/smoke-diagnostics.sh`: upload a diagnostics smoke run and verify
+  obvious secret redaction.

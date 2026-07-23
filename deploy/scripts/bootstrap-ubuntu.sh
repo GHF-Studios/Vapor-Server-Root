@@ -35,7 +35,8 @@ apt-get install -y \
   libsqlite3-dev \
   openssl \
   pkg-config \
-  rustc
+  rustc \
+  ufw
 
 if ! getent group "${VAPOR_GROUP}" >/dev/null; then
   groupadd --system "${VAPOR_GROUP}"
@@ -62,6 +63,12 @@ install_dir root "${VAPOR_GROUP}" 0750 "${VAPOR_CONFIG_DIR}"
 chown -R "${VAPOR_USER}:${VAPOR_GROUP}" "${VAPOR_STATE_ROOT}"
 find "${VAPOR_STATE_ROOT}" -type d -exec chmod 0750 {} +
 find "${VAPOR_STATE_ROOT}" -type f -exec chmod 0640 {} +
+
+install_secret_env "${VAPOR_CONFIG_DIR}/root.env" \
+"VAPOR_DOMAIN=${VAPOR_DOMAIN}
+VAPOR_BRANCH=${VAPOR_BRANCH}
+# Optional pre-DNS HTTP test host, for example a server IP address:
+# VAPOR_HTTP_FALLBACK_HOST="
 
 install_secret_env "${VAPOR_CONFIG_DIR}/homepage.env" \
 "VAPOR_HOMEPAGE_BIND=127.0.0.1:7111"

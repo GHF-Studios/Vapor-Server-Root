@@ -11,8 +11,16 @@ VAPOR_BRANCH="${VAPOR_BRANCH:-main}"
 VAPOR_DEPLOY_ROOT="${VAPOR_DEPLOY_ROOT:-/opt/vapor-server-root}"
 VAPOR_STATE_ROOT="${VAPOR_STATE_ROOT:-/var/lib/vapor-server}"
 VAPOR_CONFIG_DIR="${VAPOR_CONFIG_DIR:-/etc/vapor-server}"
+if [ -r "${VAPOR_CONFIG_DIR}/root.env" ]; then
+  set -a
+  # shellcheck disable=SC1090
+  source "${VAPOR_CONFIG_DIR}/root.env"
+  set +a
+fi
+
 VAPOR_USER="${VAPOR_USER:-vapor}"
 VAPOR_GROUP="${VAPOR_GROUP:-vapor}"
+VAPOR_HTTP_FALLBACK_HOST="${VAPOR_HTTP_FALLBACK_HOST:-}"
 
 require_root() {
   if [ "$(id -u)" -ne 0 ]; then

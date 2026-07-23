@@ -9,6 +9,8 @@ Last verified: 2026-07-23 Europe/Berlin.
 - Reverse proxy: Caddy.
 - Service manager: systemd.
 - Intended public host: `vapor.ghf-studios.site`.
+- Temporary pre-DNS access: HTTP fallback may be configured directly against the
+  VPS while the domain registration is pending.
 - Deploy root: `/opt/vapor-server-root`.
 - State root: `/var/lib/vapor-server`.
 - Server-local config: `/etc/vapor-server`.

@@ -12,11 +12,29 @@ if ! command -v caddy >/dev/null 2>&1; then
   exit 1
 fi
 
+fallback_block="$(mktemp)"
+trap 'rm -f "${fallback_block}"' EXIT
+
+if [ -n "${VAPOR_HTTP_FALLBACK_HOST}" ]; then
+  cat > "${fallback_block}" <<EOF
+http://${VAPOR_HTTP_FALLBACK_HOST} {
+	import vapor_routes
+}
+EOF
+fi
+
 sed "s/{{VAPOR_DOMAIN}}/${VAPOR_DOMAIN}/g" \
-  "${DEPLOY_DIR}/caddy/Caddyfile.template" > /etc/caddy/Caddyfile
+  "${DEPLOY_DIR}/caddy/Caddyfile.template" \
+  | sed \
+    -e "/{{VAPOR_HTTP_FALLBACK_BLOCK}}/r ${fallback_block}" \
+    -e "/{{VAPOR_HTTP_FALLBACK_BLOCK}}/d" \
+  > /etc/caddy/Caddyfile
 
 caddy fmt --overwrite /etc/caddy/Caddyfile
 caddy validate --config /etc/caddy/Caddyfile
 systemctl enable caddy.service
 
 echo "caddy: installed config for ${VAPOR_DOMAIN}"
+if [ -n "${VAPOR_HTTP_FALLBACK_HOST}" ]; then
+  echo "caddy: installed pre-DNS HTTP fallback for ${VAPOR_HTTP_FALLBACK_HOST}"
+fi
