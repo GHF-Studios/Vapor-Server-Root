@@ -80,7 +80,9 @@ Vapor-Diagnostics-Server 7e08c425ac07bf65ebf16e9c993bf07362f49509
   `deploy/scripts/grant-identity-role.sh`. The route grants `root` or
   `content-developer` only by requiring both external identities: SteamID64 and
   GitHub login. Those identities must already be linked to the same internal
-  profile row. The internal profile id is not accepted as grant authority.
+  profile row. The internal profile id is not accepted as grant authority. The
+  route accepts either the server-local bootstrap token or a non-expired root
+  dashboard session.
 - Public unauthenticated requests to the role-grant route reject with `401`.
 - The removed `/v1/admin/root/grant` compatibility route returns `404`.
 - `deploy/scripts/configure-identity-auth.sh --status` waits for the identity

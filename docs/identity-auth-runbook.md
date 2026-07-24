@@ -71,9 +71,10 @@ Browser login/register:
 http://82.165.77.104/login
 ```
 
-After a Steam profile has signed in and linked GitHub, grant the root role from
-the VPS by naming both external identities. The server rejects the grant unless
-that SteamID64 and GitHub login are already linked to the same internal profile:
+After a Steam profile has signed in and linked GitHub, bootstrap the first root
+role from the VPS by naming both external identities. The server rejects the
+grant unless that SteamID64 and GitHub login are already linked to the same
+internal profile:
 
 ```bash
 sudo /opt/vapor-server-root/deploy/scripts/grant-identity-role.sh \
@@ -88,8 +89,10 @@ sudo /opt/vapor-server-root/deploy/scripts/grant-identity-role.sh \
 ```
 
 The script reads `/etc/vapor-server/identity.env` locally and does not print the
-admin token. The server refuses elevated role grants until the target profile
-has both linked Steam and GitHub identities. Conceptually, `root` implies
+admin token. This is the bootstrap/emergency operator path. After at least one
+root profile exists, normal role management should be authorized by a root
+dashboard session against the same `POST /v1/admin/roles/grant` route, not by
+asking normal admins to handle server-local tokens. Conceptually, `root` implies
 developer capability; a root profile does not need a separate
 `content-developer` row unless policy later chooses to store both explicitly.
 
