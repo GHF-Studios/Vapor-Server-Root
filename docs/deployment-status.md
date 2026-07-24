@@ -1,6 +1,6 @@
 # Vapor server deployment status
 
-Last verified: 2026-07-23 Europe/Berlin.
+Last verified: 2026-07-24 Europe/Berlin.
 
 ## Current VPS baseline
 
@@ -30,10 +30,10 @@ commits in `Vapor-Server-Root` may be newer than the runtime-impacting commit
 recorded here.
 
 ```text
-Vapor-Server-Root       0a79b7c
+Vapor-Server-Root       87e8851
 Vapor-Homepage-Server   a41aedc4180792d5561a8e3bf12a1383e172c1ea
 Vapor-Docs-Server       27518a45a1916678615620c5047de70296644ffe
-Vapor-Identity-Server   b8b1671
+Vapor-Identity-Server   3b98ffcd0aa9d14739fb4423885bf501c31228a0
 Vapor-Diagnostics-Server 7e08c425ac07bf65ebf16e9c993bf07362f49509
 ```
 
@@ -74,8 +74,15 @@ Vapor-Diagnostics-Server 7e08c425ac07bf65ebf16e9c993bf07362f49509
 - Identity source has been split out of the previous monolithic `main.rs` into
   focused modules for config, route handlers, persistence, provider
   verification, profile/session logic, and shared utilities.
+- Identity has a server-local role-grant operator route and script:
+  `POST /v1/admin/roles/grant` and
+  `deploy/scripts/grant-identity-role.sh`. The route grants `root` or
+  `content-developer` by exactly one selector: Vapor profile id, SteamID64, or
+  GitHub login. The target profile must already have both linked identities.
+- Public unauthenticated requests to the role-grant route reject with `401`.
 - `root` is a role/group on normal Steam-anchored profiles, not a separate
-  account type. GitHub does not create standalone player profiles.
+  account type. GitHub does not create standalone player profiles. Effective
+  authorization treats `root` as implying `content-developer`.
 - The old server-local dashboard password remains present in
   `/etc/vapor-server/identity.env` for compatibility/readiness visibility, but
   it is no longer the dashboard authorization model.
