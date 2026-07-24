@@ -54,6 +54,9 @@ service business logic unless a shared library is deliberately introduced.
 /api/diagnostics/         diagnostics service API
 ```
 
+Every stateful service should expose a public, secret-free `/v1/status` probe
+that reports readiness and temporary auth model without leaking tokens.
+
 Temporary pre-DNS HTTP-by-IP access exists only for the current setup phase. The
 intended long-lived public origin is `https://vapor.ghf-studios.site`.
 
@@ -141,6 +144,7 @@ the VPS, not in GitHub Actions.
 Minimum checks before claiming the stack is good:
 
 - all four local service health checks pass;
+- docs, identity, and diagnostics status probes pass;
 - public pre-DNS routes answer while DNS is pending;
 - `/api/identity/v1/auth/status` reports configured provider readiness
   accurately;

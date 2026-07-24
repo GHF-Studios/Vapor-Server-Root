@@ -16,9 +16,12 @@ fi
 
 curl --fail --silent --show-error "${base}/healthz" >/dev/null
 curl --fail --silent --show-error "${base}/docs/healthz" >/dev/null
+curl --fail --silent --show-error "${base}/docs/v1/status" >/dev/null
 curl --fail --silent --show-error "${base}/api/identity/healthz" >/dev/null
+curl --fail --silent --show-error "${base}/api/identity/v1/auth/status" >/dev/null
 curl --fail --silent --show-error "${base}/api/diagnostics/healthz" >/dev/null
+curl --fail --silent --show-error "${base}/api/diagnostics/v1/status" >/dev/null
 curl --fail --silent --show-error "${base}/login" >/dev/null
 curl --fail --silent --show-error "${base}/admin" >/dev/null
 
-echo "public-http: health checks passed for ${base}"
+echo "public-http: health/status checks passed for ${base}"
