@@ -50,6 +50,7 @@ service business logic unless a shared library is deliberately introduced.
 /logout                   identity session logout
 /admin                    public shell; privileged content requires root session
 /admin/roles/grant        browser role-grant form; root session only
+/admin/roles/revoke       browser role-revoke form; root session only
 /api/identity/            identity service API
 /api/diagnostics/         diagnostics service API
 ```
@@ -84,6 +85,8 @@ intended long-lived public origin is `https://vapor.ghf-studios.site`.
 | Link GitHub | existing Steam session + GitHub OAuth proof |
 | View admin dashboard data | non-expired root dashboard session |
 | Grant roles from dashboard | non-expired root dashboard session |
+| Revoke roles from dashboard | non-expired root dashboard session; last active root is protected |
+| View identity audit events | server-local admin token or non-expired root dashboard session |
 | Bootstrap first root | server-local admin token or first-root flow |
 | Emergency operator role grant | server-local admin token on the VPS |
 
@@ -101,6 +104,21 @@ Role grants require both external identities:
 The server must verify that the SteamID64 and GitHub login are already linked to
 the same internal profile row before writing the role. Role grants by internal
 profile id are intentionally not supported.
+
+Role revocation uses the same external-identity target shape:
+
+```json
+{"role":"root","steam_id64":"7656119...","github_login":"example"}
+```
+
+The service refuses to revoke the last active `root` role through normal
+operator routes. Since `root` implies `content-developer`, revoking
+`content-developer` from an active root profile is rejected; demotion to
+developer is represented as explicitly granting `content-developer`, then
+revoking `root`.
+
+Audit listings identify actor/subject profiles by linked external identities.
+They must not expose internal profile ids as operator-facing authority.
 
 ## State contract
 
@@ -149,6 +167,7 @@ Minimum checks before claiming the stack is good:
 - `/api/identity/v1/auth/status` reports configured provider readiness
   accurately;
 - unauthenticated role-grant attempts return `401`;
+- unauthenticated role-revoke and audit-list attempts return `401`;
 - removed legacy routes return `404`;
 - profile listings do not expose internal profile ids;
 - diagnostics smoke upload redacts obvious secrets;
@@ -159,7 +178,8 @@ Minimum checks before claiming the stack is good:
 
 These are not reasons to stop; they are the next places to widen the pipe.
 
-- Admin UI is functional but unstyled and barely ergonomic.
+- Admin UI is functional but unstyled and still missing role-change
+  confirmation polish.
 - Identity sessions are short and server-local; no JWT/service-to-service auth
   contract exists yet.
 - Docs and diagnostics still use token/admin-token scaffolds rather than

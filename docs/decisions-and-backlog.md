@@ -76,7 +76,9 @@ while the implementation is still moving quickly.
   admin token remains an operations bootstrap tool, not the normal dashboard
   login model. Role grants require both SteamID64 and GitHub login, reject
   internal profile ids as authority, and can be authorized by either the
-  bootstrap token or a root dashboard session.
+  bootstrap token or a root dashboard session. Role revocation now uses the same
+  external-identity target model, refuses to revoke the last active `root`, and
+  records audit events visible to root/admin operators.
 - Diagnostics accepts unauthenticated upload scaffolds and keeps list/download/
   export behind an admin token for now.
 - `Vapor-Server-Root` tracks the services as root-level submodules named after
@@ -118,7 +120,8 @@ while the implementation is still moving quickly.
   Steam-side publishing still needs appropriate Steamworks/pipeline authority.
 - Move pre-DNS HTTP cookie config to HTTPS-only secure cookies once DNS and
   certificate issuance are live.
-- Improve dashboard role-management UX beyond the first functional form.
+- Improve dashboard role-management UX beyond the first functional grant/revoke
+  forms and audit table.
 - Decide how Vapor Shell should wrap server REST APIs without making raw HTTP
   details the normal user workflow.
 - Configure GitHub branch protection and repository Actions secrets once a valid

@@ -97,6 +97,34 @@ handle server-local tokens. Conceptually, `root` implies developer capability; a
 root profile does not need a separate `content-developer` row unless policy
 later chooses to store both explicitly.
 
+Root dashboard sessions can also revoke roles through `/admin`. The matching
+API route is `POST /v1/admin/roles/revoke` and uses the same target shape as
+grants:
+
+```json
+{"role":"root","steam_id64":"7656119...","github_login":"example"}
+```
+
+The service refuses to revoke the last active `root` role. Because `root`
+implies `content-developer`, revoking `content-developer` from an active root
+profile is rejected; to demote root to developer, first grant an explicit
+`content-developer` row and then revoke `root`.
+
+Recent identity audit events are visible to root/admin operators through the
+dashboard and `GET /v1/admin/audit`. Audit output names actors and subjects by
+linked Steam/GitHub identities instead of internal profile ids.
+
+Server-local emergency/operator helpers are also available on the VPS:
+
+```bash
+sudo /opt/vapor-server-root/deploy/scripts/revoke-identity-role.sh \
+  --role root \
+  --steam-id64 <developer-steamid64> \
+  --github-login <developer-github-login>
+
+sudo /opt/vapor-server-root/deploy/scripts/list-identity-audit.sh
+```
+
 GitHub-only readiness smoke:
 
 ```bash
@@ -123,6 +151,6 @@ not print provider tokens or dashboard cookies.
 
 - Steam proof still needs a Steamworks/Vapor client command that can call
   `GetAuthTicketForWebApi` and pass the ticket hex into the smoke/login flow.
-- The dashboard has functional root-only profile listing and role grant form,
-  but not polished UI/UX.
+- The dashboard has functional root-only profile listing, role grant/revoke,
+  and recent audit visibility, but not polished UI/UX.
 - Temporary HTTP-by-IP cookies are not `Secure`. This must change after HTTPS.
