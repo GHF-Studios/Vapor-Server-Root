@@ -31,6 +31,28 @@ VAPOR_DEPLOY_KNOWN_HOSTS
 Use the VPS IP while DNS is pending. Replace it with the domain later if
 desired.
 
+Optional public smoke-check secret:
+
+```text
+VAPOR_DEPLOY_PUBLIC_BASE
+```
+
+For the pre-DNS phase this can be:
+
+```text
+http://82.165.77.104
+```
+
+After DNS/HTTPS cutover, use:
+
+```text
+https://vapor.ghf-studios.site
+```
+
+When this optional value is present, the workflow runs public health/status
+checks after the VPS deploy service completes. These checks intentionally verify
+that unauthenticated identity audit/revoke routes return `401`.
+
 ## VPS setup
 
 Create an SSH keypair outside the repository. Install only the public key on the
@@ -42,6 +64,20 @@ sudo deploy/scripts/install-github-actions-deploy-user.sh \
 ```
 
 Store the private key as the GitHub secret `VAPOR_DEPLOY_SSH_KEY`.
+
+The restricted deploy user can only start the server-owned deploy service and
+show that service's systemd status. GitHub Actions still cannot read
+`/etc/vapor-server` secrets, run arbitrary root commands, or directly build
+services.
+
+The workflow sequence is:
+
+1. confirm required secrets exist;
+2. configure the temporary Actions SSH key;
+3. request `vapor-deploy.service` on the VPS;
+4. print `vapor-deploy.service` status for diagnostics;
+5. optionally run public HTTP smoke checks when `VAPOR_DEPLOY_PUBLIC_BASE` is
+   configured.
 
 ## Current local limitation
 

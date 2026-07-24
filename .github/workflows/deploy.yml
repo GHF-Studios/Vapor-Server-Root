@@ -17,6 +17,7 @@ jobs:
   deploy:
     name: Trigger VPS deploy
     runs-on: ubuntu-latest
+    timeout-minutes: 20
 
     steps:
       - name: Check required secrets
@@ -27,6 +28,7 @@ jobs:
           VAPOR_DEPLOY_USER: ${{ secrets.VAPOR_DEPLOY_USER }}
           VAPOR_DEPLOY_SSH_KEY: ${{ secrets.VAPOR_DEPLOY_SSH_KEY }}
           VAPOR_DEPLOY_KNOWN_HOSTS: ${{ secrets.VAPOR_DEPLOY_KNOWN_HOSTS }}
+          VAPOR_DEPLOY_PUBLIC_BASE: ${{ secrets.VAPOR_DEPLOY_PUBLIC_BASE }}
         run: |
           set -euo pipefail
           ready=true
@@ -37,6 +39,17 @@ jobs:
             fi
           done
           echo "ready=${ready}" >> "${GITHUB_OUTPUT}"
+          if [ "${ready}" = "true" ]; then
+            echo "::notice::deployment trigger is configured"
+          else
+            echo "::notice::deployment trigger skipped; configure the required VAPOR_DEPLOY_* secrets to enable it"
+          fi
+          if [ -n "${VAPOR_DEPLOY_PUBLIC_BASE}" ]; then
+            echo "public_smoke=true" >> "${GITHUB_OUTPUT}"
+          else
+            echo "public_smoke=false" >> "${GITHUB_OUTPUT}"
+            echo "::notice::optional VAPOR_DEPLOY_PUBLIC_BASE secret is not set; skipping public HTTP smoke"
+          fi
 
       - name: Configure SSH
         if: steps.deploy-secrets.outputs.ready == 'true'
@@ -62,7 +75,60 @@ jobs:
           set -euo pipefail
           ssh \
             -i "${HOME}/.ssh/vapor_deploy" \
+            -o ConnectTimeout=20 \
             -o IdentitiesOnly=yes \
             -o StrictHostKeyChecking=yes \
             "${VAPOR_DEPLOY_USER}@${VAPOR_DEPLOY_HOST}" \
             'sudo -n /usr/bin/systemctl start vapor-deploy.service'
+
+      - name: Show deploy service status
+        if: always() && steps.deploy-secrets.outputs.ready == 'true'
+        shell: bash
+        env:
+          VAPOR_DEPLOY_HOST: ${{ secrets.VAPOR_DEPLOY_HOST }}
+          VAPOR_DEPLOY_USER: ${{ secrets.VAPOR_DEPLOY_USER }}
+        run: |
+          set -euo pipefail
+          ssh \
+            -i "${HOME}/.ssh/vapor_deploy" \
+            -o ConnectTimeout=20 \
+            -o IdentitiesOnly=yes \
+            -o StrictHostKeyChecking=yes \
+            "${VAPOR_DEPLOY_USER}@${VAPOR_DEPLOY_HOST}" \
+            'sudo -n /usr/bin/systemctl status --no-pager vapor-deploy.service'
+
+      - name: Public HTTP smoke
+        if: steps.deploy-secrets.outputs.ready == 'true' && steps.deploy-secrets.outputs.public_smoke == 'true'
+        shell: bash
+        env:
+          VAPOR_DEPLOY_PUBLIC_BASE: ${{ secrets.VAPOR_DEPLOY_PUBLIC_BASE }}
+        run: |
+          set -euo pipefail
+          base="${VAPOR_DEPLOY_PUBLIC_BASE%/}"
+          curl --fail --silent --show-error "${base}/healthz" >/dev/null
+          curl --fail --silent --show-error "${base}/docs/healthz" >/dev/null
+          curl --fail --silent --show-error "${base}/docs/v1/status" >/dev/null
+          curl --fail --silent --show-error "${base}/api/identity/healthz" >/dev/null
+          curl --fail --silent --show-error "${base}/api/identity/v1/auth/status" >/dev/null
+          curl --fail --silent --show-error "${base}/api/diagnostics/healthz" >/dev/null
+          curl --fail --silent --show-error "${base}/api/diagnostics/v1/status" >/dev/null
+          identity_audit_status="$(
+            curl --silent --show-error --output /dev/null --write-out "%{http_code}" \
+              "${base}/api/identity/v1/admin/audit"
+          )"
+          if [ "${identity_audit_status}" != "401" ]; then
+            echo "expected unauthenticated identity audit to return 401, got ${identity_audit_status}" >&2
+            exit 1
+          fi
+          identity_revoke_status="$(
+            curl --silent --show-error --output /dev/null --write-out "%{http_code}" \
+              --request POST \
+              --header "content-type: application/json" \
+              --data '{"role":"root","steam_id64":"76561190000000000","github_login":"nobody"}' \
+              "${base}/api/identity/v1/admin/roles/revoke"
+          )"
+          if [ "${identity_revoke_status}" != "401" ]; then
+            echo "expected unauthenticated identity role revoke to return 401, got ${identity_revoke_status}" >&2
+            exit 1
+          fi
+          echo "public-http: health/status checks passed for ${base}"
