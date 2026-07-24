@@ -86,10 +86,11 @@ while the implementation is still moving quickly.
   worktrees, not separate sibling checkouts.
 - `Vapor-Server-Root` now contains first-pass direct VPS deployment automation:
   Ubuntu bootstrap, root-repo deploy, Caddy config installation, systemd unit
-  installation, automatic branch polling via systemd timer, and local health
-  checks. It also contains first-pass whole-server file-state export/restore
-  scripts for `/var/lib/vapor-server`, excluding server-local env/token files
-  under `/etc/vapor-server`.
+  installation, automatic branch polling via systemd timer, GitHub Actions
+  deploy triggering through a restricted VPS user, public HTTP smoke checks, and
+  local health checks. It also contains first-pass whole-server file-state
+  export/restore scripts for `/var/lib/vapor-server`, excluding server-local
+  env/token files under `/etc/vapor-server`.
 - Domain-independent pre-DNS work is allowed through temporary HTTP fallback
   routing, SSH/UFW hardening, and local/IP smoke checks. The fallback is not the
   final public product URL.
@@ -124,8 +125,8 @@ while the implementation is still moving quickly.
   forms and audit table.
 - Decide how Vapor Shell should wrap server REST APIs without making raw HTTP
   details the normal user workflow.
-- Configure GitHub branch protection and repository Actions secrets once a valid
-  GitHub admin session is available.
+- Configure GitHub branch protection once the exact protected-branch policy is
+  accepted.
 
 ## Explicitly not current scope
 

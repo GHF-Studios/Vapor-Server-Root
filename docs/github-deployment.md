@@ -84,11 +84,16 @@ that is inactive after successful completion. The workflow therefore treats the
 trigger step and public smoke as the pass/fail authority, while the status step
 is diagnostic output.
 
-## Current local limitation
+## Current verified state
 
-At the time this document was written, local `gh auth status` reported an
-invalid GitHub CLI token. Branch protection and repository secrets therefore
-still need either:
+The deploy user and repository secrets are configured. A push-triggered workflow
+run has successfully:
 
-- a repaired local `gh` login with sufficient repository admin permissions; or
-- setup through the GitHub web dashboard.
+- connected to the VPS as the restricted deploy user;
+- started `vapor-deploy.service`;
+- printed deploy service status;
+- completed public pre-DNS HTTP smoke checks.
+
+The remaining GitHub-side hardening task is branch protection. The intended
+policy is to protect `main`, require PR review/merge for normal updates, and
+keep emergency direct-push authority narrow.
