@@ -30,11 +30,11 @@ commits in `Vapor-Server-Root` may be newer than the runtime-impacting commit
 recorded here.
 
 ```text
-Vapor-Server-Root       6926fad
+Vapor-Server-Root       d1f00c1
 Vapor-Homepage-Server   a41aedc4180792d5561a8e3bf12a1383e172c1ea
-Vapor-Docs-Server       27518a45a1916678615620c5047de70296644ffe
-Vapor-Identity-Server   ac8dbfb8c5995c881219b786bee7c0005a611a5d
-Vapor-Diagnostics-Server 7e08c425ac07bf65ebf16e9c993bf07362f49509
+Vapor-Docs-Server       3e16167
+Vapor-Identity-Server   ebb54e6
+Vapor-Diagnostics-Server fb318fa
 ```
 
 ## Verified runtime state
@@ -51,8 +51,8 @@ Vapor-Diagnostics-Server 7e08c425ac07bf65ebf16e9c993bf07362f49509
   resulting service run reports `success`.
 - GitHub Actions deploy workflow no-ops successfully until all deployment
   secrets exist, avoiding failing Actions runs during setup.
-- Local health checks return `ok` on ports 7111, 7112, 7113, and 7114.
-- Public pre-DNS HTTP health checks pass through the fallback route.
+- Local health/status checks pass on ports 7111, 7112, 7113, and 7114.
+- Public pre-DNS HTTP health/status checks pass through the fallback route.
 - `/etc/vapor-server/root.env` preserves non-secret deployment settings for
   timer-driven runs, including the temporary pre-DNS HTTP fallback host.
 - SSH remains reachable through key authentication after hardening.
@@ -62,7 +62,7 @@ Vapor-Diagnostics-Server 7e08c425ac07bf65ebf16e9c993bf07362f49509
   permissions.
 - Identity auth readiness endpoint is deployed. GitHub OAuth browser/device
   configuration is present and reports ready. Steam Web API key configuration is
-  still missing and Steam ticket verification fails closed until it is set.
+  present and reports ready.
 - Top-level `/login`, `/logout`, and `/admin` routes are routed to the identity
   service. `/login` is the browser login/register page. `/admin` is publicly
   reachable as a locked shell.
@@ -83,9 +83,15 @@ Vapor-Diagnostics-Server 7e08c425ac07bf65ebf16e9c993bf07362f49509
   profile row. The internal profile id is not accepted as grant authority. The
   route accepts either the server-local bootstrap token or a non-expired root
   dashboard session.
+- The root dashboard has a first functional role-grant form at
+  `POST /admin/roles/grant`, backed by the same validation path as the JSON API.
+  Local smoke testing verified that a root session can grant
+  `content-developer` to an already linked Steam+GitHub profile.
 - Internal profile ids are not shown in the browser dashboard or protected
   profile listing; they remain database join keys only.
 - Public unauthenticated requests to the role-grant route reject with `401`.
+- Public docs and diagnostics status probes are deployed:
+  `/docs/v1/status` and `/api/diagnostics/v1/status`.
 - The removed `/v1/admin/root/grant` compatibility route returns `404`.
 - `deploy/scripts/configure-identity-auth.sh --status` waits for the identity
   service after restart instead of immediately failing on a bind/readiness race.
