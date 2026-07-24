@@ -120,7 +120,8 @@ while the implementation is still moving quickly.
   Steam-side publishing still needs appropriate Steamworks/pipeline authority.
 - Move pre-DNS HTTP cookie config to HTTPS-only secure cookies once DNS and
   certificate issuance are live.
-- Define developer roles, initially at least `root` and `content-developer`.
+- Wire role assignment into Vapor Shell or a dashboard action after the
+  server-local operator route has been exercised with real linked identities.
 - Decide how Vapor Shell should wrap server REST APIs without making raw HTTP
   details the normal user workflow.
 - Configure GitHub branch protection and repository Actions secrets once a valid

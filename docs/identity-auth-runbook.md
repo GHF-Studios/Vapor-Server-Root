@@ -71,6 +71,29 @@ Browser login/register:
 http://82.165.77.104/login
 ```
 
+After a profile has signed in with Steam and linked GitHub, grant the root role
+from the VPS. Use exactly one selector:
+
+```bash
+sudo /opt/vapor-server-root/deploy/scripts/grant-identity-role.sh \
+  --role root \
+  --steam-id64 <your-steamid64>
+
+sudo /opt/vapor-server-root/deploy/scripts/grant-identity-role.sh \
+  --role root \
+  --github-login <your-github-login>
+
+sudo /opt/vapor-server-root/deploy/scripts/grant-identity-role.sh \
+  --role content-developer \
+  --profile-id <profile-id>
+```
+
+The script reads `/etc/vapor-server/identity.env` locally and does not print the
+admin token. The server refuses elevated role grants until the target profile
+has both linked Steam and GitHub identities. Conceptually, `root` implies
+developer capability; a root profile does not need a separate
+`content-developer` row unless policy later chooses to store both explicitly.
+
 GitHub-only readiness smoke:
 
 ```bash
@@ -98,6 +121,6 @@ not print provider tokens or dashboard cookies.
 - Steam proof still needs a Steamworks/Vapor client command that can call
   `GetAuthTicketForWebApi` and pass the ticket hex into the smoke/login flow.
 - The dashboard has a functional browser login shell, but not a polished UI.
-- `content-developer` role assignment is not exposed through a dedicated admin
-  route yet.
+- Role assignment is available through a server-local operator script/API, not
+  through public dashboard buttons yet.
 - Temporary HTTP-by-IP cookies are not `Secure`. This must change after HTTPS.

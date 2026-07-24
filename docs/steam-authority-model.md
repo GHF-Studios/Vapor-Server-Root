@@ -52,6 +52,8 @@ Policy direction:
 - development requires linked GitHub identity;
 - root/admin implies development capability;
 - root/admin requires Steam + GitHub + `root` role;
+- elevated role grants require a server-local/admin-authorized operation and are
+  rejected unless both Steam and GitHub identities are linked first;
 - Steam-side publishing still needs the corresponding Steamworks/pipeline
   authority.
 
