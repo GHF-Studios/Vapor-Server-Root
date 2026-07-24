@@ -30,10 +30,10 @@ commits in `Vapor-Server-Root` may be newer than the runtime-impacting commit
 recorded here.
 
 ```text
-Vapor-Server-Root       87e8851
+Vapor-Server-Root       6926fad
 Vapor-Homepage-Server   a41aedc4180792d5561a8e3bf12a1383e172c1ea
 Vapor-Docs-Server       27518a45a1916678615620c5047de70296644ffe
-Vapor-Identity-Server   3b98ffcd0aa9d14739fb4423885bf501c31228a0
+Vapor-Identity-Server   ac8dbfb8c5995c881219b786bee7c0005a611a5d
 Vapor-Diagnostics-Server 7e08c425ac07bf65ebf16e9c993bf07362f49509
 ```
 
@@ -60,8 +60,9 @@ Vapor-Diagnostics-Server 7e08c425ac07bf65ebf16e9c993bf07362f49509
   endpoint.
 - Identity database files are owned by `vapor:vapor` with restrictive file
   permissions.
-- Identity auth readiness endpoint is deployed. Steam and GitHub verification
-  endpoints fail closed until server-local external credentials are configured.
+- Identity auth readiness endpoint is deployed. GitHub OAuth browser/device
+  configuration is present and reports ready. Steam Web API key configuration is
+  still missing and Steam ticket verification fails closed until it is set.
 - Top-level `/login`, `/logout`, and `/admin` routes are routed to the identity
   service. `/login` is the browser login/register page. `/admin` is publicly
   reachable as a locked shell.
@@ -81,6 +82,9 @@ Vapor-Diagnostics-Server 7e08c425ac07bf65ebf16e9c993bf07362f49509
   GitHub login. Those identities must already be linked to the same internal
   profile row. The internal profile id is not accepted as grant authority.
 - Public unauthenticated requests to the role-grant route reject with `401`.
+- The removed `/v1/admin/root/grant` compatibility route returns `404`.
+- `deploy/scripts/configure-identity-auth.sh --status` waits for the identity
+  service after restart instead of immediately failing on a bind/readiness race.
 - `root` is a role/group on normal Steam-anchored profiles, not a separate
   account type. GitHub does not create standalone player profiles. Effective
   authorization treats `root` as implying `content-developer`.
