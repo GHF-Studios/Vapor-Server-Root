@@ -7,6 +7,9 @@ while the implementation is still moving quickly.
 
 - `Vapor-Server-Root` lives beside `Vapor-Root`; it is not a `Vapor-Root`
   submodule.
+- Future server domain ownership is tracked in
+  `docs/server-domain-boundaries.md`; that document should be kept aligned with
+  this accepted-boundaries list as new service boundaries become real.
 - `Vapor-Server-Root` owns deployment/orchestration, shared operations
   conventions, and whole-system export/import composition.
 - Homepage, docs, identity, and diagnostics remain separate repositories and
