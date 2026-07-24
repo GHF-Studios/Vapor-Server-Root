@@ -79,6 +79,11 @@ The workflow sequence is:
 5. optionally run public HTTP smoke checks when `VAPOR_DEPLOY_PUBLIC_BASE` is
    configured.
 
+`systemctl status` can return a non-zero code for a completed oneshot service
+that is inactive after successful completion. The workflow therefore treats the
+trigger step and public smoke as the pass/fail authority, while the status step
+is diagnostic output.
+
 ## Current local limitation
 
 At the time this document was written, local `gh auth status` reported an

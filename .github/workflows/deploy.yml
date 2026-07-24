@@ -95,7 +95,7 @@ jobs:
             -o IdentitiesOnly=yes \
             -o StrictHostKeyChecking=yes \
             "${VAPOR_DEPLOY_USER}@${VAPOR_DEPLOY_HOST}" \
-            'sudo -n /usr/bin/systemctl status --no-pager vapor-deploy.service'
+            'sudo -n /usr/bin/systemctl status --no-pager vapor-deploy.service' || true
 
       - name: Public HTTP smoke
         if: steps.deploy-secrets.outputs.ready == 'true' && steps.deploy-secrets.outputs.public_smoke == 'true'
