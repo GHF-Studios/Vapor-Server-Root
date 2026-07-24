@@ -8,12 +8,11 @@ source "${SCRIPT_DIR}/lib.sh"
 usage() {
   cat <<'USAGE'
 Usage:
-  deploy/scripts/grant-identity-role.sh --role ROLE SELECTOR [options]
+  deploy/scripts/grant-identity-role.sh --role ROLE --steam-id64 ID --github-login LOGIN [options]
 
-Selectors, exactly one required:
-  --profile-id ID            Grant by Vapor profile id.
-  --steam-id64 ID            Grant by linked SteamID64.
-  --github-login LOGIN       Grant by linked GitHub login.
+Identity arguments:
+  --steam-id64 ID            Linked SteamID64 for the target developer/root.
+  --github-login LOGIN       Linked GitHub login for the same target profile.
 
 Options:
   --role root|content-developer
@@ -27,14 +26,14 @@ Notes:
   - If no admin token is provided, the script reads
     /etc/vapor-server/identity.env when readable.
   - The token is used only as an Authorization header and is never printed.
-  - Elevated roles require the target profile to have both Steam and GitHub
-    linked before the server will grant the role.
+  - Elevated roles require the Steam and GitHub identities to already be linked
+    to the same server-internal profile before the server will grant the role.
 USAGE
 }
 
 role=""
-selector_key=""
-selector_value=""
+steam_id64=""
+github_login=""
 base_url="${VAPOR_IDENTITY_LOCAL_URL:-http://127.0.0.1:7113}"
 admin_token="${VAPOR_IDENTITY_ADMIN_TOKEN:-}"
 admin_token_file=""
@@ -58,17 +57,6 @@ read_env_value() {
   sed -n "s/^${key}=//p" "$path" | sed -n '1p'
 }
 
-set_selector() {
-  local key="$1"
-  local value="$2"
-  if [ -n "$selector_key" ]; then
-    echo "error: provide exactly one selector" >&2
-    exit 1
-  fi
-  selector_key="$key"
-  selector_value="$value"
-}
-
 validate_role() {
   case "$1" in
     root|content-developer) ;;
@@ -77,20 +65,6 @@ validate_role() {
       exit 1
       ;;
   esac
-}
-
-validate_profile_id() {
-  case "$1" in
-    profile-*) ;;
-    *)
-      echo "error: --profile-id must start with profile-" >&2
-      exit 1
-      ;;
-  esac
-  if [ "${#1}" -gt 80 ] || [ -n "${1//[abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-]/}" ]; then
-    echo "error: invalid profile id" >&2
-    exit 1
-  fi
 }
 
 validate_steam_id64() {
@@ -157,19 +131,14 @@ while [ "$#" -gt 0 ]; do
       role="$2"
       shift 2
       ;;
-    --profile-id)
-      [ "$#" -ge 2 ] || { echo "error: missing value for $1" >&2; exit 1; }
-      set_selector "profile_id" "$2"
-      shift 2
-      ;;
     --steam-id64)
       [ "$#" -ge 2 ] || { echo "error: missing value for $1" >&2; exit 1; }
-      set_selector "steam_id64" "$2"
+      steam_id64="$2"
       shift 2
       ;;
     --github-login)
       [ "$#" -ge 2 ] || { echo "error: missing value for $1" >&2; exit 1; }
-      set_selector "github_login" "$2"
+      github_login="$2"
       shift 2
       ;;
     --base)
@@ -203,18 +172,19 @@ if [ -z "$role" ]; then
   echo "error: --role is required" >&2
   exit 1
 fi
-if [ -z "$selector_key" ]; then
-  echo "error: exactly one selector is required" >&2
+if [ -z "$steam_id64" ]; then
+  echo "error: --steam-id64 is required" >&2
+  exit 1
+fi
+if [ -z "$github_login" ]; then
+  echo "error: --github-login is required" >&2
   exit 1
 fi
 
 validate_role "$role"
 validate_base_url "$base_url"
-case "$selector_key" in
-  profile_id) validate_profile_id "$selector_value" ;;
-  steam_id64) validate_steam_id64 "$selector_value" ;;
-  github_login) validate_github_login "$selector_value" ;;
-esac
+validate_steam_id64 "$steam_id64"
+validate_github_login "$github_login"
 
 if [ -n "$admin_token_file" ]; then
   admin_token="$(read_first_line "$admin_token_file")"
@@ -225,7 +195,7 @@ fi
 validate_header_value "$admin_token"
 
 base_url="${base_url%/}"
-body="{\"role\":\"${role}\",\"${selector_key}\":\"${selector_value}\"}"
+body="{\"role\":\"${role}\",\"steam_id64\":\"${steam_id64}\",\"github_login\":\"${github_login}\"}"
 
 curl --fail-with-body --silent --show-error \
   --request POST \

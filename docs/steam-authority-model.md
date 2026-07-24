@@ -53,9 +53,14 @@ Policy direction:
 - root/admin implies development capability;
 - root/admin requires Steam + GitHub + `root` role;
 - elevated role grants require a server-local/admin-authorized operation and are
-  rejected unless both Steam and GitHub identities are linked first;
+  rejected unless the provided SteamID64 and GitHub login are already linked to
+  the same internal profile row;
 - Steam-side publishing still needs the corresponding Steamworks/pipeline
   authority.
+
+The internal profile row exists to join Steam identity, GitHub identity, roles,
+sessions, and audit events. It is not a user-facing account credential and must
+not become the authority developers or admins are asked to reason about.
 
 ## Publishing authority
 

@@ -155,6 +155,24 @@ set_env_var() {
   mv "$tmp" "$identity_env"
 }
 
+print_auth_status() {
+  local url="http://127.0.0.1:7113/v1/auth/status"
+  local attempt
+
+  for attempt in {1..40}; do
+    if curl --fail --silent --output /dev/null "$url"; then
+      curl --fail --silent --show-error "$url"
+      printf '\n'
+      return 0
+    fi
+    sleep 0.25
+  done
+
+  echo "error: vapor-identity.service did not answer ${url} after restart" >&2
+  systemctl --no-pager --full status vapor-identity.service >&2 || true
+  return 1
+}
+
 while [ "$#" -gt 0 ]; do
   case "$1" in
     --steam-web-api-key)
@@ -297,6 +315,5 @@ if [ "$restart_service" = true ]; then
 fi
 
 if [ "$show_status" = true ]; then
-  curl --fail --silent --show-error http://127.0.0.1:7113/v1/auth/status
-  printf '\n'
+  print_auth_status
 fi

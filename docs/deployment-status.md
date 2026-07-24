@@ -77,8 +77,9 @@ Vapor-Diagnostics-Server 7e08c425ac07bf65ebf16e9c993bf07362f49509
 - Identity has a server-local role-grant operator route and script:
   `POST /v1/admin/roles/grant` and
   `deploy/scripts/grant-identity-role.sh`. The route grants `root` or
-  `content-developer` by exactly one selector: Vapor profile id, SteamID64, or
-  GitHub login. The target profile must already have both linked identities.
+  `content-developer` only by requiring both external identities: SteamID64 and
+  GitHub login. Those identities must already be linked to the same internal
+  profile row. The internal profile id is not accepted as grant authority.
 - Public unauthenticated requests to the role-grant route reject with `401`.
 - `root` is a role/group on normal Steam-anchored profiles, not a separate
   account type. GitHub does not create standalone player profiles. Effective

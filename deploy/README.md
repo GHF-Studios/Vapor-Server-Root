@@ -53,8 +53,8 @@ for smoke testing only; the intended public endpoint remains
   configuration in `/etc/vapor-server/identity.env` without committing secrets,
   including GitHub browser OAuth credentials and public redirect origin.
 - `scripts/grant-identity-role.sh`: grant `root` or `content-developer` to an
-  already linked Steam+GitHub profile by Vapor profile id, SteamID64, or GitHub
-  login using the server-local identity admin token.
+  already linked Steam+GitHub developer/root profile by requiring both SteamID64
+  and GitHub login, using the server-local identity admin token.
 - `scripts/export-state.sh`: create a root-only `.tar.gz` state bundle under
   `/var/backups/vapor-server` by default. The bundle includes
   `/var/lib/vapor-server` state and a manifest, not `/etc/vapor-server` secrets.

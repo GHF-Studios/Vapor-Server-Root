@@ -71,21 +71,20 @@ Browser login/register:
 http://82.165.77.104/login
 ```
 
-After a profile has signed in with Steam and linked GitHub, grant the root role
-from the VPS. Use exactly one selector:
+After a Steam profile has signed in and linked GitHub, grant the root role from
+the VPS by naming both external identities. The server rejects the grant unless
+that SteamID64 and GitHub login are already linked to the same internal profile:
 
 ```bash
 sudo /opt/vapor-server-root/deploy/scripts/grant-identity-role.sh \
   --role root \
-  --steam-id64 <your-steamid64>
-
-sudo /opt/vapor-server-root/deploy/scripts/grant-identity-role.sh \
-  --role root \
+  --steam-id64 <your-steamid64> \
   --github-login <your-github-login>
 
 sudo /opt/vapor-server-root/deploy/scripts/grant-identity-role.sh \
   --role content-developer \
-  --profile-id <profile-id>
+  --steam-id64 <developer-steamid64> \
+  --github-login <developer-github-login>
 ```
 
 The script reads `/etc/vapor-server/identity.env` locally and does not print the
