@@ -29,7 +29,7 @@ commits in `Vapor-Server-Root` may be newer than the runtime-impacting commit
 recorded here.
 
 ```text
-Vapor-Server-Root       9630185
+Vapor-Server-Root       3ec87f6
 Vapor-Homepage-Server   a41aedc4180792d5561a8e3bf12a1383e172c1ea
 Vapor-Docs-Server       3e16167
 Vapor-Identity-Server   ca9e61e
@@ -51,6 +51,12 @@ Vapor-Diagnostics-Server fb318fa
 - GitHub Actions deployment secrets are configured. Push-triggered workflow run
   `30126015161` successfully requested the VPS-owned deploy service, printed
   deploy service status, and ran public pre-DNS HTTP smoke checks.
+- GitHub Actions workflow-dispatch run `30126858680` successfully verified the
+  deployment path after automatic state-export timer installation.
+- `vapor-state-export.timer` is enabled/active. It produced
+  `/var/backups/vapor-server/vapor-server-state-20260724T211010Z-3ec87f6.tar.gz`
+  with root-only permissions. The bundle manifest reports
+  `secrets_included = false` and excludes `/etc/vapor-server`.
 - Local health/status checks pass on ports 7111, 7112, 7113, and 7114.
 - Public pre-DNS HTTP health/status checks pass through the fallback route.
 - `/etc/vapor-server/root.env` preserves non-secret deployment settings for
