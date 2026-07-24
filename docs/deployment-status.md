@@ -30,10 +30,10 @@ commits in `Vapor-Server-Root` may be newer than the runtime-impacting commit
 recorded here.
 
 ```text
-Vapor-Server-Root       d1f00c1
+Vapor-Server-Root       274a6de
 Vapor-Homepage-Server   a41aedc4180792d5561a8e3bf12a1383e172c1ea
 Vapor-Docs-Server       3e16167
-Vapor-Identity-Server   ebb54e6
+Vapor-Identity-Server   ca9e61e
 Vapor-Diagnostics-Server fb318fa
 ```
 
@@ -83,13 +83,25 @@ Vapor-Diagnostics-Server fb318fa
   profile row. The internal profile id is not accepted as grant authority. The
   route accepts either the server-local bootstrap token or a non-expired root
   dashboard session.
-- The root dashboard has a first functional role-grant form at
-  `POST /admin/roles/grant`, backed by the same validation path as the JSON API.
-  Local smoke testing verified that a root session can grant
-  `content-developer` to an already linked Steam+GitHub profile.
+- Identity has role-revoke routes and scripts:
+  `POST /v1/admin/roles/revoke`, `POST /admin/roles/revoke`, and
+  `deploy/scripts/revoke-identity-role.sh`. Revocation uses the same linked
+  SteamID64 plus GitHub-login target model as grants. The service refuses to
+  revoke the last active `root` role and rejects attempts to revoke
+  `content-developer` from an active root profile because `root` implies
+  developer capability.
+- Identity has recent audit visibility through `GET /v1/admin/audit`, the root
+  dashboard, and `deploy/scripts/list-identity-audit.sh`. Authenticated VPS
+  smoke verified the audit helper works without printing the server-local admin
+  token.
+- The root dashboard has first functional role-grant and role-revoke controls
+  backed by the same validation paths as the JSON API. Local tests cover root
+  effective-role display, last-root revoke refusal, no-op revoke audit behavior,
+  and audit listings that avoid exposing internal profile ids.
 - Internal profile ids are not shown in the browser dashboard or protected
   profile listing; they remain database join keys only.
-- Public unauthenticated requests to the role-grant route reject with `401`.
+- Public unauthenticated requests to role-grant, role-revoke, and audit routes
+  reject with `401`.
 - Public docs and diagnostics status probes are deployed:
   `/docs/v1/status` and `/api/diagnostics/v1/status`.
 - The removed `/v1/admin/root/grant` compatibility route returns `404`.
