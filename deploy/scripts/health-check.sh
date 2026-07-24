@@ -27,5 +27,7 @@ if [ "${identity_revoke_status}" != "401" ]; then
 fi
 curl --fail --silent --show-error http://127.0.0.1:7114/healthz >/dev/null
 curl --fail --silent --show-error http://127.0.0.1:7114/v1/status >/dev/null
+systemctl is-enabled --quiet vapor-state-export.timer
+systemctl is-active --quiet vapor-state-export.timer
 
 echo "health: all Vapor services responded locally"

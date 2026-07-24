@@ -1,0 +1,11 @@
+[Unit]
+Description=Periodic Vapor server state export
+
+[Timer]
+OnBootSec=15min
+OnUnitActiveSec=1h
+RandomizedDelaySec=5min
+Persistent=true
+
+[Install]
+WantedBy=timers.target

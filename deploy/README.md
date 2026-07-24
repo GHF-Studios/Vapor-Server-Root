@@ -45,6 +45,8 @@ for smoke testing only; the intended public endpoint remains
   services, install units/proxy config, and restart services.
 - `scripts/install-auto-deploy.sh`: install a systemd timer that periodically
   runs `deploy.sh` against the configured branch.
+- `scripts/install-state-backup.sh`: install a systemd timer that periodically
+  runs `export-state.sh`.
 - `scripts/harden-vps.sh`: make SSH key-only explicit and enable UFW for
   SSH/HTTP/HTTPS.
 - `scripts/install-github-actions-deploy-user.sh`: create a restricted deploy
@@ -58,7 +60,9 @@ for smoke testing only; the intended public endpoint remains
   or emergency operator use.
 - `scripts/export-state.sh`: create a root-only `.tar.gz` state bundle under
   `/var/backups/vapor-server` by default. The bundle includes
-  `/var/lib/vapor-server` state and a manifest, not `/etc/vapor-server` secrets.
+  `/var/lib/vapor-server` state and a manifest, not `/etc/vapor-server`
+  secrets. `VAPOR_BACKUP_RETENTION_COUNT` controls retention for automatically
+  named state bundles and defaults to 48.
 - `scripts/restore-state.sh`: restore a bundle created by `export-state.sh`
   onto an already bootstrapped server; requires `--yes` and moves prior state
   aside before replacing it.

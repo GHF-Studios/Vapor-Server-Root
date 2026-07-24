@@ -139,6 +139,11 @@ State must be recoverable through:
 Whole-system export/import is composed in `Vapor-Server-Root`; service-specific
 formats should become explicit service contracts over time.
 
+The VPS also runs a root-owned automatic state-export timer. It creates
+`vapor-server-state-*.tar.gz` bundles under `/var/backups/vapor-server`, excludes
+`/etc/vapor-server` secrets, and prunes old automatically named bundles by
+`VAPOR_BACKUP_RETENTION_COUNT` so backups do not grow without bound.
+
 ## Deployment contract
 
 The current deployment path is:
@@ -150,12 +155,13 @@ GitHub main branch
   -> cargo release build per service
   -> systemd unit install/restart
   -> Caddy config install/restart
+  -> auto-deploy and state-export timer install
   -> local health check
 ```
 
-The systemd timer polls `main`. GitHub Actions trigger plumbing exists but is
-not fully configured as the authority path yet. Server secrets must remain on
-the VPS, not in GitHub Actions.
+The systemd deploy timer polls `main`. GitHub Actions also triggers the same
+VPS-owned deploy service after `main` changes. Server secrets remain on the VPS,
+not in GitHub Actions.
 
 ## Smoke-check contract
 
@@ -172,7 +178,8 @@ Minimum checks before claiming the stack is good:
 - profile listings do not expose internal profile ids;
 - diagnostics smoke upload redacts obvious secrets;
 - docs route serves the current docs bundle;
-- state export excludes `/etc/vapor-server` secrets.
+- state export excludes `/etc/vapor-server` secrets;
+- automatic state-export timer is enabled and active.
 
 ## Current wobbly seams
 

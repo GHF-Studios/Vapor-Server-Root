@@ -1,0 +1,9 @@
+[Unit]
+Description=Export Vapor server state bundle
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+EnvironmentFile=-/etc/vapor-server/root.env
+ExecStart=/opt/vapor-server-root/deploy/scripts/export-state.sh
