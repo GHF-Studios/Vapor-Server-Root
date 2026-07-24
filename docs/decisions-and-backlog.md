@@ -74,7 +74,9 @@ while the implementation is still moving quickly.
   as a shell but only renders privileged identity data/actions for a non-expired
   root profile session with linked Steam and GitHub identities. The server-local
   admin token remains an operations bootstrap tool, not the normal dashboard
-  login model.
+  login model. Role grants require both SteamID64 and GitHub login, reject
+  internal profile ids as authority, and can be authorized by either the
+  bootstrap token or a root dashboard session.
 - Diagnostics accepts unauthenticated upload scaffolds and keeps list/download/
   export behind an admin token for now.
 - `Vapor-Server-Root` tracks the services as root-level submodules named after
@@ -105,23 +107,18 @@ while the implementation is still moving quickly.
 - Add docs deployment from a Vapor-owned/root-owned deploy workflow.
 - Define diagnostics upload request schema, redaction contract, size limits,
   retention policy, and root-dev download/export flow.
-- Replace placeholder admin tokens with identity-backed authorization once
-  identity is ready enough, but do not make identity a filesystem-registry
-  prototype first.
-- Configure server-local `VAPOR_IDENTITY_STEAM_WEB_API_KEY` and
-  `VAPOR_IDENTITY_GITHUB_CLIENT_ID`/`VAPOR_IDENTITY_GITHUB_CLIENT_SECRET` after
-  the external Steam/GitHub app credentials exist.
-- Exercise a real end-to-end root login after provider credentials are set:
-  Steamworks/Vapor client obtains a Steam Web API ticket, GitHub Device Flow
-  verifies GitHub identity, then `finish` issues a 5-minute root dashboard
-  session.
+- Move docs, diagnostics list/download/export, and other privileged service
+  APIs from placeholder tokens/admin tokens toward identity-root authorization
+  once the cross-service auth contract is explicit.
+- Exercise the Steamworks/Vapor-client ticket path for end-to-end developer auth
+  beyond browser OpenID login: client obtains a Steam Web API ticket, server
+  verifies it, and developer workflows can rely on the stronger proof.
 - Define the secure publishing authority model for Workshop publishing and
   root app/server publishing. Root/admin implies developer capability, but
   Steam-side publishing still needs appropriate Steamworks/pipeline authority.
 - Move pre-DNS HTTP cookie config to HTTPS-only secure cookies once DNS and
   certificate issuance are live.
-- Wire role assignment into Vapor Shell or a dashboard action after the
-  server-local operator route has been exercised with real linked identities.
+- Improve dashboard role-management UX beyond the first functional form.
 - Decide how Vapor Shell should wrap server REST APIs without making raw HTTP
   details the normal user workflow.
 - Configure GitHub branch protection and repository Actions secrets once a valid

@@ -91,10 +91,11 @@ sudo /opt/vapor-server-root/deploy/scripts/grant-identity-role.sh \
 The script reads `/etc/vapor-server/identity.env` locally and does not print the
 admin token. This is the bootstrap/emergency operator path. After at least one
 root profile exists, normal role management should be authorized by a root
-dashboard session against the same `POST /v1/admin/roles/grant` route, not by
-asking normal admins to handle server-local tokens. Conceptually, `root` implies
-developer capability; a root profile does not need a separate
-`content-developer` row unless policy later chooses to store both explicitly.
+dashboard session, either through the dashboard form at `/admin` or against the
+same `POST /v1/admin/roles/grant` API route, not by asking normal admins to
+handle server-local tokens. Conceptually, `root` implies developer capability; a
+root profile does not need a separate `content-developer` row unless policy
+later chooses to store both explicitly.
 
 GitHub-only readiness smoke:
 
@@ -122,7 +123,6 @@ not print provider tokens or dashboard cookies.
 
 - Steam proof still needs a Steamworks/Vapor client command that can call
   `GetAuthTicketForWebApi` and pass the ticket hex into the smoke/login flow.
-- The dashboard has a functional browser login shell, but not a polished UI.
-- Role assignment is available through a server-local operator script/API, not
-  through public dashboard buttons yet.
+- The dashboard has functional root-only profile listing and role grant form,
+  but not polished UI/UX.
 - Temporary HTTP-by-IP cookies are not `Secure`. This must change after HTTPS.

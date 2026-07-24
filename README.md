@@ -71,6 +71,9 @@ business logic.
 See `docs/decisions-and-backlog.md` for the accepted boundaries, pending
 decisions, and future/backburner items that should not be lost.
 
+See `docs/vertical-slice-contracts.md` for the current cross-service contracts:
+routes, auth, state ownership, deployment, smoke checks, and known weak seams.
+
 See `docs/deployment-status.md` for the latest recorded VPS deployment status.
 
 See `docs/identity-auth-runbook.md` for Steam/GitHub identity provider
