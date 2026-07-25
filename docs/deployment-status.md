@@ -1,6 +1,7 @@
 # Vapor server deployment status
 
-Last verified: 2026-07-24 Europe/Berlin.
+Last verified: 2026-07-25 Europe/Berlin via GitHub Actions deploy run
+`30139280612` and CI run `30139280620`.
 
 ## Current VPS baseline
 
@@ -29,11 +30,11 @@ commits in `Vapor-Server-Root` may be newer than the runtime-impacting commit
 recorded here.
 
 ```text
-Vapor-Server-Root       3ec87f6
+Vapor-Server-Root       a2a9592
 Vapor-Homepage-Server   a41aedc4180792d5561a8e3bf12a1383e172c1ea
-Vapor-Docs-Server       3e16167
+Vapor-Docs-Server       63ff610
 Vapor-Identity-Server   ca9e61e
-Vapor-Diagnostics-Server fb318fa
+Vapor-Diagnostics-Server 058c403
 ```
 
 ## Verified runtime state
@@ -53,6 +54,10 @@ Vapor-Diagnostics-Server fb318fa
   deploy service status, and ran public pre-DNS HTTP smoke checks.
 - GitHub Actions workflow-dispatch run `30126858680` successfully verified the
   deployment path after automatic state-export timer installation.
+- GitHub Actions push-triggered deploy run `30139280612` successfully deployed
+  root commit `a2a9592`, printed deploy-service status, and ran public HTTP
+  smoke checks. Companion CI run `30139280620` ran repository-local QA against
+  recursive submodules.
 - `vapor-state-export.timer` is enabled/active. It produced
   `/var/backups/vapor-server/vapor-server-state-20260724T211010Z-3ec87f6.tar.gz`
   with root-only permissions. The bundle manifest reports
@@ -110,6 +115,9 @@ Vapor-Diagnostics-Server fb318fa
   reject with `401`.
 - Public docs and diagnostics status probes are deployed:
   `/docs/v1/status` and `/api/diagnostics/v1/status`.
+- Public unauthenticated contract checks cover docs write/export rejection,
+  diagnostics v1/v2 protected read rejection, identity admin rejection, and the
+  removed legacy root-grant route.
 - The removed `/v1/admin/root/grant` compatibility route returns `404`.
 - `deploy/scripts/configure-identity-auth.sh --status` waits for the identity
   service after restart instead of immediately failing on a bind/readiness race.
@@ -127,11 +135,22 @@ Vapor-Diagnostics-Server fb318fa
   `deploy/scripts/smoke-identity-auth.sh` are deployed on the VPS.
 - Curated Vapor docs are deployed through the public HTTP docs route: 410 files,
   8,739,662 bytes uncompressed, served under `/docs/`.
-- A diagnostics smoke run was uploaded and verified to redact obvious secret
-  tokens on disk.
+- Docs source now includes immutable release directories and explicit promotion;
+  existing deployed docs state may still be the previously uploaded curated docs
+  bundle until the next authenticated docs publication.
+- Diagnostics source now includes the additive v2 JSON report API, stronger
+  redaction, collision-resistant run ids, and aggregate quota support. Public
+  smoke verifies protected v2 reads fail closed without authorization; an
+  authenticated v2 upload smoke has not been run on the VPS in this verification
+  pass.
+- A diagnostics v1 smoke run was previously uploaded and verified to redact
+  obvious secret tokens on disk.
 - A root-only state export bundle was created under `/var/backups/vapor-server`
   and verified to contain `/var/lib/vapor-server` state plus a manifest, while
   excluding `/etc/vapor-server` env/token files.
+- Restore source now validates state-bundle structure before extraction and
+  before stopping services. A disposable-server restore rehearsal remains
+  pending.
 
 ## Remaining external dependency
 
