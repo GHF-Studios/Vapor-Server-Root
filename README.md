@@ -77,6 +77,9 @@ routes, auth, state ownership, deployment, smoke checks, and known weak seams.
 See `docs/cross-service-authorization-contract.md` for the target identity
 introspection contract that should replace service-local token scaffolds.
 
+See `docs/docs-release-publication-contract.md` for immutable documentation
+release, promotion, rollback, and export semantics.
+
 See `docs/diagnostics-report-contract-v2.md` for the structured diagnostics
 upload, privacy, redaction, storage, and quota contract.
 

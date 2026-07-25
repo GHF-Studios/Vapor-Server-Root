@@ -67,8 +67,10 @@ while the implementation is still moving quickly.
 ## Current scaffold behavior
 
 - Homepage serves public homepage/legal placeholder routes and health.
-- Docs serves health, token-protected current-docs upload, and token-protected
-  export scaffolds.
+- Docs serves health, token-protected current-docs compatibility upload,
+  immutable source-level release directories, explicit release promotion, and
+  token-protected export scaffolds. The legacy upload routes create or reuse a
+  content-derived release and promote it so existing scripts keep working.
 - Identity serves health/status plus token-protected init/export scaffolds
   backed by SQLite/SQLx schema bootstrap. It has fail-closed Steam Web API
   ticket verification, Steam OpenID browser login, GitHub OAuth token
@@ -116,7 +118,9 @@ while the implementation is still moving quickly.
   state that should be queryable.
 - Evolve export/import bundle formats for docs, identity, and diagnostics beyond
   the initial root-level file-state bundle.
-- Add docs deployment from a Vapor-owned/root-owned deploy workflow.
+- Deploy and verify the Docs immutable-release source slice, then decide whether
+  the next docs step is release-only upload, release-and-promote CLI ergonomics,
+  or a service-owned streamed export/import format.
 - Deploy and verify the diagnostics v2 source slice, then decide whether the
   next diagnostics step is richer operator listing/download UX, identity-root
   authorization, or an explicit service-owned export/import bundle.
