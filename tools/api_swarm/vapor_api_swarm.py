@@ -23,12 +23,28 @@ from typing import Any
 
 DEFAULT_KEY_PATH = Path.home() / ".config" / "openai" / "api_key"
 DEFAULT_RUN_ROOT = Path("/tmp") / "vapor-api-swarm-runs"
+DEFAULT_PROMPT_PACK_DIR = Path("/home/leslieghf/Documents/AGENT_NOTES")
 
 PRICE_PER_MILLION: dict[str, tuple[float, float]] = {
     "gpt-5.6": (5.00, 30.00),
     "gpt-5.6-sol": (5.00, 30.00),
     "gpt-5.6-terra": (2.50, 15.00),
     "gpt-5.6-luna": (1.00, 6.00),
+}
+
+PROFILE_DESCRIPTIONS: dict[str, str] = {
+    "lean": (
+        "9 calls: 7 grouped Terra workers plus Sol security QA and final synthesis. "
+        "Cheapest useful prompt-pack run."
+    ),
+    "balanced": (
+        "13 calls: 11 Terra workers plus Sol security QA and final synthesis. "
+        "Default; preserves the prompt-pack workload while merging obvious overlaps."
+    ),
+    "full": (
+        "16 calls: one worker per non-manager prompt file plus Sol security QA "
+        "and final synthesis. Most exhaustive prompt-pack run."
+    ),
 }
 
 CONTEXT_FILES: tuple[str, ...] = (
@@ -72,6 +88,52 @@ class AgentSpec:
     reasoning_effort: str
     max_output_tokens: int
     task: str
+    source_prompts: tuple[int, ...] = ()
+
+
+@dataclass(frozen=True)
+class PromptFile:
+    number: int
+    name: str
+    path: str
+    text: str
+
+
+@dataclass(frozen=True)
+class PromptPack:
+    source_dir: Path
+    base_text: str
+    prompts: dict[int, PromptFile]
+
+    def selected_text(self, numbers: tuple[int, ...]) -> str:
+        sections = []
+        for number in numbers:
+            prompt = self.prompts[number]
+            sections.append(f"\n\n===== {prompt.name} =====\n{prompt.text.strip()}")
+        return "\n".join(sections).strip()
+
+    def all_text(self) -> str:
+        return self.selected_text(tuple(sorted(self.prompts)))
+
+    def manifest(self) -> dict[str, Any]:
+        return {
+            "source_dir": str(self.source_dir),
+            "base": {
+                "name": "Agent_Prompt_Base.txt",
+                "bytes": len(self.base_text.encode("utf-8")),
+                "approx_tokens": approximate_tokens(self.base_text),
+            },
+            "prompts": [
+                {
+                    "number": prompt.number,
+                    "name": prompt.name,
+                    "path": prompt.path,
+                    "bytes": len(prompt.text.encode("utf-8")),
+                    "approx_tokens": approximate_tokens(prompt.text),
+                }
+                for prompt in sorted(self.prompts.values(), key=lambda item: item.number)
+            ],
+        }
 
 
 @dataclass
@@ -124,6 +186,26 @@ def parse_args() -> argparse.Namespace:
         help=f"API key file fallback if OPENAI_API_KEY is unset. Default: {DEFAULT_KEY_PATH}",
     )
     parser.add_argument(
+        "--prompt-pack-dir",
+        type=Path,
+        default=DEFAULT_PROMPT_PACK_DIR,
+        help=(
+            "Directory containing Agent_Prompt_Base.txt and Agent_Prompt_001.txt "
+            f"style files. Default: {DEFAULT_PROMPT_PACK_DIR}"
+        ),
+    )
+    parser.add_argument(
+        "--profile",
+        default="balanced",
+        choices=sorted(PROFILE_DESCRIPTIONS),
+        help="Workload profile. Default: balanced.",
+    )
+    parser.add_argument(
+        "--list-profiles",
+        action="store_true",
+        help="List workload profiles and exit without making API calls.",
+    )
+    parser.add_argument(
         "--max-budget-usd",
         type=float,
         default=8.50,
@@ -133,13 +215,13 @@ def parse_args() -> argparse.Namespace:
         "--worker-model",
         default="gpt-5.6-terra",
         choices=sorted(PRICE_PER_MILLION),
-        help="Model for the 10 worker calls. Default: gpt-5.6-terra.",
+        help="Model for worker calls. Default: gpt-5.6-terra.",
     )
     parser.add_argument(
         "--manager-model",
         default="gpt-5.6-sol",
         choices=sorted(PRICE_PER_MILLION),
-        help="Model for the 2 manager calls. Default: gpt-5.6-sol.",
+        help="Model for manager calls. Default: gpt-5.6-sol.",
     )
     parser.add_argument(
         "--worker-effort",
@@ -215,78 +297,130 @@ def load_context(repo_root: Path) -> tuple[str, list[dict[str, Any]]]:
     return context, manifest
 
 
+def load_prompt_pack(prompt_pack_dir: Path) -> PromptPack:
+    source_dir = prompt_pack_dir.expanduser().resolve()
+    base_path = source_dir / "Agent_Prompt_Base.txt"
+    if not base_path.exists():
+        raise FileNotFoundError(f"Prompt-pack base file missing: {base_path}")
+
+    prompts: dict[int, PromptFile] = {}
+    for path in sorted(source_dir.glob("Agent_Prompt_*.txt")):
+        if path.name == "Agent_Prompt_Base.txt":
+            continue
+        match = re.fullmatch(r"Agent_Prompt_(\d{3})\.txt", path.name)
+        if not match:
+            continue
+        number = int(match.group(1))
+        prompts[number] = PromptFile(
+            number=number,
+            name=path.name,
+            path=str(path),
+            text=path.read_text(encoding="utf-8", errors="replace"),
+        )
+
+    missing = [number for number in range(1, 17) if number not in prompts]
+    if missing:
+        formatted = ", ".join(f"{number:03}" for number in missing)
+        raise FileNotFoundError(f"Prompt pack is missing prompt file(s): {formatted}")
+
+    return PromptPack(
+        source_dir=source_dir,
+        base_text=base_path.read_text(encoding="utf-8", errors="replace"),
+        prompts=prompts,
+    )
+
+
 def approximate_tokens(text: str) -> int:
     return max(1, len(text) // 4)
 
 
-def make_worker_specs(worker_model: str, effort: str) -> list[AgentSpec]:
-    tasks = [
-        (
-            "worker-01-boundary-map",
-            "Future service/domain boundary map",
-            "Produce a future Vapor server domain/service boundary map. Focus on homepage, docs, identity, diagnostics, publish/pipeline, toolchain, artifact, registry/catalog, MCP/capability surface, operations/recovery, and any missing domains. Do not design internals; focus on ownership and authority separation.",
-        ),
-        (
-            "worker-02-publish-pipeline",
-            "Publish/pipeline authority",
-            "Speculate deeply on Vapor-Publish-Server / Vapor-Pipeline-Server. Design conceptual authority for local root/developer request, identity verification, GitHub link verification, Vapor role verification, signed publish jobs, protected runner execution, Steam/Workshop credential isolation, audit logs, and artifacts. Recommend whether publish and pipeline start as one service or separate names.",
-        ),
-        (
-            "worker-03-artifacts",
-            "Artifact service boundary",
-            "Analyze whether Vapor-Artifact-Server deserves a separate boundary. Compare it against docs, pipeline, registry/catalog, and backups. Focus on build outputs, generated docs bundles, crash symbols, release manifests, checksums, provenance metadata, retention, and download authorization.",
-        ),
-        (
-            "worker-04-toolchain",
-            "Toolchain service boundary",
-            "Speculate on Vapor-Toolchain-Server. Focus on blessed tool versions, checksums, Rust/toolchain manifests, Steamworks SDK versions, content build tools, app-local manifests, and binary caches later. Define what can start as static docs/manifests versus what eventually needs a service API.",
-        ),
-        (
-            "worker-05-registry-catalog",
-            "Registry/catalog boundary",
-            "Determine whether Vapor needs a Registry/Catalog server boundary. Focus on known apps, packages, game modules, Workshop content records, compatibility constraints, visibility states, ownership metadata, and dependency graphs. Separate clearly from artifact storage and publishing actions.",
-        ),
-        (
-            "worker-06-identity-pressure",
-            "Identity expansion pressure",
-            "Stress-test Vapor-Identity-Server's boundary. Identify what should stay in Identity and what should not. Consider roles, teams, entitlements, developer membership, Steam profiles, GitHub links, root authorization, service tokens/JWTs, publishing authority, and audit. Recommend future split points without splitting prematurely.",
-        ),
-        (
-            "worker-07-diagnostics-contract",
-            "Diagnostics future contract",
-            "Design the next diagnostics contract from the current implementation baseline. Focus on upload schema, storage shape, redaction, size limits, retention, listing/download UX, root authorization, player privacy, no hostname, no persistent machine id, and useful coarse system fields.",
-        ),
-        (
-            "worker-08-docs-truth",
-            "Docs truth surface",
-            "Speculate on Vapor-Docs-Server as the truth surface. Consider uploaded docs bundles, generated API docs, versioned docs, current pointers, provenance, docs publishing authorization, docs generated from engine/game repos, and overlap with Artifact/Pipeline.",
-        ),
-        (
-            "worker-09-mcp-capabilities",
-            "MCP/capability surface",
-            "Design a future Vapor-MCP-Server boundary. MCP must not own the backend. Define useful resources and tools over existing services: docs, diagnostics, deployment status, backup manifests, identity summaries, publish job status, and audit summaries. Mark read-only-first tools versus gated authority later.",
-        ),
-        (
-            "worker-10-ops-shell-roadmap",
-            "Operations, recovery, and Vapor Shell",
-            "Speculate on Vapor operations/recovery and Vapor Shell operator UX. Focus on state export/import, backup listing, restore drills, fresh VPS restore, deploy status, service health, last-known-good versions, disaster recovery evidence, and commands that avoid raw curl/admin tokens/internal routes.",
-        ),
-    ]
-
+def make_worker_specs(
+    profile: str,
+    prompt_pack: PromptPack,
+    worker_model: str,
+    effort: str,
+) -> list[AgentSpec]:
+    prompt_groups = worker_prompt_groups(profile)
     return [
         AgentSpec(
-            agent_id=agent_id,
+            agent_id=f"worker-{index:02}-{slug}",
             title=title,
             model=worker_model,
             reasoning_effort=effort,
             max_output_tokens=2600,
-            task=task,
+            task=task_from_prompts(prompt_pack, prompts, title),
+            source_prompts=prompts,
         )
-        for agent_id, title, task in tasks
+        for index, (slug, title, prompts) in enumerate(prompt_groups, start=1)
     ]
 
 
-def make_manager_specs(manager_model: str, effort: str) -> list[AgentSpec]:
+def worker_prompt_groups(profile: str) -> list[tuple[str, str, tuple[int, ...]]]:
+    if profile == "lean":
+        return [
+            ("boundaries-gaps", "Boundary map and missing domains", (1, 15)),
+            ("publish-artifacts", "Publish, pipeline, and artifact split", (2, 3)),
+            ("toolchain-registry-repos", "Toolchain, registry, and repo topology", (4, 5, 13)),
+            ("identity-security", "Identity pressure with authority risks", (6,)),
+            ("diagnostics-docs", "Diagnostics and docs contracts", (7, 8)),
+            ("mcp-ops-shell", "MCP, operations, and Vapor Shell", (9, 10, 11)),
+            ("roadmap-sequencing", "Roadmap sequencing", (14,)),
+        ]
+    if profile == "balanced":
+        return [
+            ("boundaries-gaps", "Boundary map and missing domains", (1, 15)),
+            ("publish-pipeline", "Publish/pipeline authority", (2,)),
+            ("artifacts", "Artifact service boundary", (3,)),
+            ("toolchain", "Toolchain service boundary", (4,)),
+            ("registry-catalog", "Registry/catalog boundary", (5,)),
+            ("identity-pressure", "Identity expansion pressure", (6,)),
+            ("diagnostics-contract", "Diagnostics future contract", (7,)),
+            ("docs-truth", "Docs truth surface", (8,)),
+            ("mcp-capabilities", "MCP/capability surface", (9,)),
+            ("ops-shell", "Operations/recovery and Vapor Shell", (10, 11)),
+            ("repo-roadmap", "Repository topology and roadmap sequencing", (13, 14)),
+        ]
+    if profile == "full":
+        return [
+            ("boundary-map", "Future service/domain boundary map", (1,)),
+            ("publish-pipeline", "Publish/pipeline authority", (2,)),
+            ("artifacts", "Artifact service boundary", (3,)),
+            ("toolchain", "Toolchain service boundary", (4,)),
+            ("registry-catalog", "Registry/catalog boundary", (5,)),
+            ("identity-pressure", "Identity expansion pressure", (6,)),
+            ("diagnostics-contract", "Diagnostics future contract", (7,)),
+            ("docs-truth", "Docs truth surface", (8,)),
+            ("mcp-capabilities", "MCP/capability surface", (9,)),
+            ("ops-recovery", "Operations/recovery capability", (10,)),
+            ("shell-operator-ux", "Vapor Shell operator UX", (11,)),
+            ("repo-topology", "Repository topology", (13,)),
+            ("roadmap-sequencing", "Roadmap sequencing", (14,)),
+            ("missing-domains", "Missing domains and false assumptions", (15,)),
+        ]
+    raise ValueError(f"Unknown profile: {profile}")
+
+
+def task_from_prompts(
+    prompt_pack: PromptPack,
+    numbers: tuple[int, ...],
+    title: str,
+) -> str:
+    if len(numbers) == 1:
+        return prompt_pack.prompts[numbers[0]].text.strip()
+    prompt_names = ", ".join(f"Agent_Prompt_{number:03}.txt" for number in numbers)
+    return (
+        f"Task: Produce one integrated report for {title}.\n\n"
+        f"Use these source prompt files as the workload definition: {prompt_names}.\n"
+        "Merge overlapping concerns, preserve disagreements, and do not treat the "
+        "grouping as permission to collapse real authority boundaries."
+    )
+
+
+def make_manager_specs(
+    prompt_pack: PromptPack,
+    manager_model: str,
+    effort: str,
+) -> list[AgentSpec]:
     return [
         AgentSpec(
             agent_id="manager-01-security-authority-qa",
@@ -294,12 +428,8 @@ def make_manager_specs(manager_model: str, effort: str) -> list[AgentSpec]:
             model=manager_model,
             reasoning_effort=effort,
             max_output_tokens=3600,
-            task=(
-                "Review all worker reports for security, authority, privacy, and operations risks. "
-                "Find incorrect boundary assumptions, unsafe sequencing, premature credential exposure, "
-                "identity/publishing conflation, diagnostics privacy problems, and live-system mutation risks. "
-                "Return prioritized findings and concrete corrections."
-            ),
+            task=prompt_pack.prompts[12].text.strip(),
+            source_prompts=(12,),
         ),
         AgentSpec(
             agent_id="manager-02-final-synthesis",
@@ -307,20 +437,26 @@ def make_manager_specs(manager_model: str, effort: str) -> list[AgentSpec]:
             model=manager_model,
             reasoning_effort=effort,
             max_output_tokens=5200,
-            task=(
-                "Synthesize the worker reports plus the security/authority QA into a final recommendation. "
-                "Return: recommended boundary map, near-term sequence, disagreements/tradeoffs, candidate docs "
-                "to create/update, candidate repos to create now versus defer, and the single best next concrete action."
-            ),
+            task=prompt_pack.prompts[16].text.strip(),
+            source_prompts=(16,),
         ),
     ]
 
 
-def build_worker_input(context: str, spec: AgentSpec) -> str:
+def build_worker_input(context: str, prompt_pack: PromptPack, spec: AgentSpec) -> str:
+    assigned_prompts = prompt_pack.selected_text(spec.source_prompts)
     return f"""\
 <vapor_context>
 {context}
 </vapor_context>
+
+<manual_swarm_prompt_base>
+{prompt_pack.base_text}
+</manual_swarm_prompt_base>
+
+<assigned_prompt_files>
+{assigned_prompts}
+</assigned_prompt_files>
 
 <task>
 {spec.task}
@@ -344,6 +480,7 @@ Return markdown with these headings:
 
 def build_manager_input(
     context: str,
+    prompt_pack: PromptPack,
     spec: AgentSpec,
     reports: dict[str, str],
     manager_qa: str | None = None,
@@ -360,6 +497,14 @@ def build_manager_input(
 <vapor_context>
 {context}
 </vapor_context>
+
+<manual_swarm_prompt_base>
+{prompt_pack.base_text}
+</manual_swarm_prompt_base>
+
+<manual_swarm_prompt_pack>
+{prompt_pack.all_text()}
+</manual_swarm_prompt_pack>
 
 <worker_reports>
 {''.join(report_sections)}
@@ -483,6 +628,7 @@ async def run_workers(
     client: Any,
     specs: list[AgentSpec],
     context: str,
+    prompt_pack: PromptPack,
     concurrency: int,
     output_dir: Path,
     logger: Logger,
@@ -497,7 +643,7 @@ async def run_workers(
             report, record = await run_agent(
                 client=client,
                 spec=spec,
-                user_input=build_worker_input(context, spec),
+                user_input=build_worker_input(context, prompt_pack, spec),
                 output_dir=output_dir,
                 logger=logger,
                 save_raw=save_raw,
@@ -522,29 +668,136 @@ def write_combined_report(output_dir: Path, reports: dict[str, str], manager_rep
     (output_dir / "ALL_REPORTS.md").write_text("".join(parts), encoding="utf-8")
 
 
+def planned_call_estimates(
+    context: str,
+    prompt_pack: PromptPack,
+    workers: list[AgentSpec],
+    managers: list[AgentSpec],
+) -> list[dict[str, Any]]:
+    estimates: list[dict[str, Any]] = []
+    for spec in workers:
+        planned_input = build_worker_input(context, prompt_pack, spec)
+        input_tokens = approximate_tokens(SHARED_SYSTEM_PROMPT + planned_input)
+        estimates.append(planned_record("worker", spec, input_tokens))
+
+    placeholder_reports = {
+        spec.agent_id: "x" * (spec.max_output_tokens * 4) for spec in workers
+    }
+    manager_1_input = build_manager_input(
+        context=context,
+        prompt_pack=prompt_pack,
+        spec=managers[0],
+        reports=placeholder_reports,
+    )
+    manager_1_input_tokens = approximate_tokens(SHARED_SYSTEM_PROMPT + manager_1_input)
+    estimates.append(planned_record("manager", managers[0], manager_1_input_tokens))
+
+    manager_2_input = build_manager_input(
+        context=context,
+        prompt_pack=prompt_pack,
+        spec=managers[1],
+        reports=placeholder_reports,
+        manager_qa="x" * (managers[0].max_output_tokens * 4),
+    )
+    manager_2_input_tokens = approximate_tokens(SHARED_SYSTEM_PROMPT + manager_2_input)
+    estimates.append(planned_record("manager", managers[1], manager_2_input_tokens))
+    return estimates
+
+
+def planned_record(phase: str, spec: AgentSpec, input_tokens: int) -> dict[str, Any]:
+    return {
+        "phase": phase,
+        "agent_id": spec.agent_id,
+        "title": spec.title,
+        "model": spec.model,
+        "reasoning_effort": spec.reasoning_effort,
+        "source_prompts": [f"Agent_Prompt_{number:03}.txt" for number in spec.source_prompts],
+        "estimated_input_tokens": input_tokens,
+        "max_output_tokens": spec.max_output_tokens,
+        "worst_case_cost_usd": estimate_cost(
+            spec.model,
+            input_tokens,
+            spec.max_output_tokens,
+        ),
+    }
+
+
 def print_dry_run(
     args: argparse.Namespace,
     output_dir: Path,
     context_manifest: list[dict[str, Any]],
     context: str,
+    prompt_pack: PromptPack,
     workers: list[AgentSpec],
     managers: list[AgentSpec],
 ) -> None:
     total_context_tokens = approximate_tokens(context)
+    planned = planned_call_estimates(context, prompt_pack, workers, managers)
+    planned_worker_cost = sum(
+        item["worst_case_cost_usd"] for item in planned if item["phase"] == "worker"
+    )
+    planned_manager_cost = sum(
+        item["worst_case_cost_usd"] for item in planned if item["phase"] == "manager"
+    )
+    planned_total_cost = planned_worker_cost + planned_manager_cost
     print("Vapor API swarm dry run")
     print(f"Repo root: {args.repo_root.resolve()}")
     print(f"Output dir: {output_dir}")
+    print(f"Profile: {args.profile} — {PROFILE_DESCRIPTIONS[args.profile]}")
+    print(f"Prompt pack: {prompt_pack.source_dir}")
     print(f"Budget guard: ${args.max_budget_usd:.2f}")
     print(f"Approx shared context tokens per call: {total_context_tokens:,}")
+    print(
+        "Planned calls: "
+        f"{len(workers)} workers + {len(managers)} managers = {len(workers) + len(managers)}"
+    )
+    print(
+        "Worst-case token-plan estimate: "
+        f"${planned_total_cost:.4f} "
+        f"(workers ${planned_worker_cost:.4f}, managers ${planned_manager_cost:.4f})"
+    )
+    if planned_total_cost > args.max_budget_usd:
+        print(
+            "WARNING: worst-case plan estimate exceeds the budget guard. "
+            "Use a cheaper profile/model or lower output limits before a real run."
+        )
     print("\nContext files:")
     for item in context_manifest:
         print(f"- {item['path']} ({item['bytes']} bytes, ~{item['approx_tokens']} tokens)")
+    print("\nPrompt pack:")
+    manifest = prompt_pack.manifest()
+    print(
+        f"- {manifest['base']['name']} "
+        f"({manifest['base']['bytes']} bytes, ~{manifest['base']['approx_tokens']} tokens)"
+    )
+    for item in manifest["prompts"]:
+        print(
+            f"- {item['name']} "
+            f"({item['bytes']} bytes, ~{item['approx_tokens']} tokens)"
+        )
     print("\nWorkers:")
+    planned_by_agent = {item["agent_id"]: item for item in planned}
     for spec in workers:
-        print(f"- {spec.agent_id}: {spec.title} [{spec.model}, {spec.reasoning_effort}]")
+        item = planned_by_agent[spec.agent_id]
+        print(
+            f"- {spec.agent_id}: {spec.title} "
+            f"[{spec.model}, {spec.reasoning_effort}] "
+            f"prompts={','.join(item['source_prompts'])} "
+            f"in~{item['estimated_input_tokens']:,} "
+            f"out≤{item['max_output_tokens']:,} "
+            f"cost≤${item['worst_case_cost_usd']:.4f}"
+        )
     print("\nManagers:")
     for spec in managers:
-        print(f"- {spec.agent_id}: {spec.title} [{spec.model}, {spec.reasoning_effort}]")
+        item = planned_by_agent[spec.agent_id]
+        print(
+            f"- {spec.agent_id}: {spec.title} "
+            f"[{spec.model}, {spec.reasoning_effort}] "
+            f"prompts={','.join(item['source_prompts'])} "
+            f"in~{item['estimated_input_tokens']:,} "
+            f"out≤{item['max_output_tokens']:,} "
+            f"cost≤${item['worst_case_cost_usd']:.4f}"
+        )
     print("\nNo API calls were made.")
 
 
@@ -567,6 +820,12 @@ def confirm_or_exit(args: argparse.Namespace, logger: Logger) -> None:
 
 async def async_main() -> int:
     args = parse_args()
+    if args.list_profiles:
+        print("Vapor API swarm workload profiles")
+        for name in sorted(PROFILE_DESCRIPTIONS):
+            print(f"- {name}: {PROFILE_DESCRIPTIONS[name]}")
+        return 0
+
     repo_root = args.repo_root.expanduser().resolve()
     if not (repo_root / "AGENTS.md").exists():
         print(f"Repo root does not look like Vapor-Server-Root: {repo_root}", file=sys.stderr)
@@ -582,14 +841,26 @@ async def async_main() -> int:
     logger.write("INIT", f"Output directory: {output_dir}")
 
     context, context_manifest = load_context(repo_root)
-    workers = make_worker_specs(args.worker_model, args.worker_effort)
-    managers = make_manager_specs(args.manager_model, args.manager_effort)
+    prompt_pack = load_prompt_pack(args.prompt_pack_dir)
+    workers = make_worker_specs(
+        profile=args.profile,
+        prompt_pack=prompt_pack,
+        worker_model=args.worker_model,
+        effort=args.worker_effort,
+    )
+    managers = make_manager_specs(prompt_pack, args.manager_model, args.manager_effort)
+    planned = planned_call_estimates(context, prompt_pack, workers, managers)
+    planned_total_cost = sum(item["worst_case_cost_usd"] for item in planned)
 
     write_json(output_dir / "context_manifest.json", context_manifest)
+    write_json(output_dir / "prompt_pack_manifest.json", prompt_pack.manifest())
     write_json(
         output_dir / "run_config.json",
         {
             "repo_root": str(repo_root),
+            "prompt_pack_dir": str(prompt_pack.source_dir),
+            "profile": args.profile,
+            "profile_description": PROFILE_DESCRIPTIONS[args.profile],
             "max_budget_usd": args.max_budget_usd,
             "worker_model": args.worker_model,
             "manager_model": args.manager_model,
@@ -597,13 +868,23 @@ async def async_main() -> int:
             "manager_effort": args.manager_effort,
             "concurrency": args.concurrency,
             "context_approx_tokens": approximate_tokens(context),
+            "planned_worst_case_cost_usd": planned_total_cost,
+            "planned_calls": planned,
             "workers": [asdict(spec) for spec in workers],
             "managers": [asdict(spec) for spec in managers],
         },
     )
 
     if args.dry_run:
-        print_dry_run(args, output_dir, context_manifest, context, workers, managers)
+        print_dry_run(
+            args,
+            output_dir,
+            context_manifest,
+            context,
+            prompt_pack,
+            workers,
+            managers,
+        )
         return 0
 
     api_key = read_api_key(args.key_file)
@@ -630,6 +911,22 @@ async def async_main() -> int:
         return 2
 
     confirm_or_exit(args, logger)
+    logger.write(
+        "PLAN",
+        (
+            f"Profile={args.profile}; calls={len(workers) + len(managers)}; "
+            f"planned worst-case estimate=${planned_total_cost:.4f}; "
+            f"budget guard=${args.max_budget_usd:.2f}"
+        ),
+    )
+    if planned_total_cost > args.max_budget_usd:
+        logger.write(
+            "WARN",
+            (
+                "Planned worst-case estimate exceeds the budget guard. "
+                "Actual spend may still be lower, but consider a cheaper profile/model."
+            ),
+        )
     client = AsyncOpenAI(api_key=api_key)
 
     usage_records: list[UsageRecord] = []
@@ -640,6 +937,7 @@ async def async_main() -> int:
         client=client,
         specs=workers,
         context=context,
+        prompt_pack=prompt_pack,
         concurrency=args.concurrency,
         output_dir=output_dir,
         logger=logger,
@@ -662,7 +960,7 @@ async def async_main() -> int:
         manager_1_report, manager_1_record = await run_agent(
             client=client,
             spec=manager_1,
-            user_input=build_manager_input(context, manager_1, worker_reports),
+            user_input=build_manager_input(context, prompt_pack, manager_1, worker_reports),
             output_dir=output_dir,
             logger=logger,
             save_raw=args.save_raw,
@@ -686,6 +984,7 @@ async def async_main() -> int:
                 spec=manager_2,
                 user_input=build_manager_input(
                     context=context,
+                    prompt_pack=prompt_pack,
                     spec=manager_2,
                     reports=worker_reports,
                     manager_qa=manager_1_report,

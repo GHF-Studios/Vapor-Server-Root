@@ -5,9 +5,13 @@ Vapor architecture swarm.
 
 The default run:
 
-- reads only checked-in Vapor server docs/source context;
-- makes 10 worker API calls with `gpt-5.6-terra`;
-- makes 2 manager API calls with `gpt-5.6-sol`;
+- reads checked-in Vapor server docs/source context;
+- reads the manual swarm prompt pack from
+  `/home/leslieghf/Documents/AGENT_NOTES/`;
+- maps that prompt pack into a workload profile instead of forcing one fixed
+  worker count;
+- defaults to the `balanced` profile: 11 worker API calls with
+  `gpt-5.6-terra` plus 2 manager API calls with `gpt-5.6-sol`;
 - writes markdown reports, usage data, and a terminal-friendly log;
 - stops before starting manager work if worker usage already crosses the budget
   guard;
@@ -43,6 +47,17 @@ Python SDK, and prints the planned swarm without spending tokens:
 bash tools/api_swarm/run_swarm.sh --dry-run
 ```
 
+The dry-run prints:
+
+- loaded repo context files;
+- loaded prompt-pack files;
+- selected profile;
+- worker/manager count;
+- model and prompt files assigned to each agent;
+- approximate input-token count per agent;
+- max output-token limit per agent;
+- worst-case token-plan cost estimate.
+
 ## Run the experiment
 
 ```bash
@@ -54,6 +69,21 @@ The script asks for confirmation before making API calls.
 ## Useful options
 
 ```bash
+# List available workload profiles.
+bash tools/api_swarm/run_swarm.sh --list-profiles
+
+# Cheapest useful prompt-pack run: 7 workers + 2 managers.
+bash tools/api_swarm/run_swarm.sh --profile lean --dry-run
+
+# Default prompt-pack run: 11 workers + 2 managers.
+bash tools/api_swarm/run_swarm.sh --profile balanced --dry-run
+
+# Exhaustive prompt-pack run: 14 workers + 2 managers.
+bash tools/api_swarm/run_swarm.sh --profile full --dry-run
+
+# Use a different prompt-pack directory.
+bash tools/api_swarm/run_swarm.sh --prompt-pack-dir /path/to/AGENT_NOTES --dry-run
+
 # Lower the spend guard.
 bash tools/api_swarm/run_swarm.sh --max-budget-usd 4.00
 
@@ -83,3 +113,8 @@ Because worker calls run concurrently, no script can enforce an exact
 penny-perfect hard cap mid-flight. This harness keeps output limits modest,
 checks budget after each completed call, and does not start manager calls if the
 worker phase already crosses the configured guard.
+
+The dry-run worst-case estimate assumes every call uses its full configured
+`max_output_tokens`, plus manager calls receive full-size worker report
+placeholders. Actual runs should usually cost less, but the estimate is the
+right preflight number to inspect before typing `RUN`.
