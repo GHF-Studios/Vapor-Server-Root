@@ -114,9 +114,9 @@ Vapor-Diagnostics-Server 058c403
 - Public unauthenticated requests to role-grant, role-revoke, and audit routes
   reject with `401`.
 - Public docs and diagnostics status probes are deployed:
-  `/docs/v1/status` and `/api/diagnostics/v1/status`.
+  `/docs/status` and `/api/diagnostics/status`.
 - Public unauthenticated contract checks cover docs write/export rejection,
-  diagnostics v1/v2 protected read rejection, identity admin rejection, and the
+  diagnostics protected read rejection, identity admin rejection, and the
   removed legacy root-grant route.
 - The removed `/v1/admin/root/grant` compatibility route returns `404`.
 - `deploy/scripts/configure-identity-auth.sh --status` waits for the identity
@@ -135,15 +135,15 @@ Vapor-Diagnostics-Server 058c403
   `deploy/scripts/smoke-identity-auth.sh` are deployed on the VPS.
 - Curated Vapor docs are deployed through the public HTTP docs route: 410 files,
   8,739,662 bytes uncompressed, served under `/docs/`.
-- Docs source now includes immutable release directories and explicit promotion;
-  existing deployed docs state may still be the previously uploaded curated docs
-  bundle until the next authenticated docs publication.
-- Diagnostics source now includes the additive v2 JSON report API, stronger
+- Docs source now uses a single current-tree publication model. Existing
+  deployed docs state may still be the previously uploaded curated docs bundle
+  until the next authenticated docs publication.
+- Diagnostics source now exposes one structured JSON report API with stronger
   redaction, collision-resistant run ids, and aggregate quota support. Public
-  smoke verifies protected v2 reads fail closed without authorization; an
-  authenticated v2 upload smoke has not been run on the VPS in this verification
-  pass.
-- A diagnostics v1 smoke run was previously uploaded and verified to redact
+  smoke verifies protected reads fail closed without authorization; an
+  authenticated diagnostics upload smoke has not been run on the VPS in this
+  verification pass.
+- An older diagnostics smoke run was previously uploaded and verified to redact
   obvious secret tokens on disk.
 - A root-only state export bundle was created under `/var/backups/vapor-server`
   and verified to contain `/var/lib/vapor-server` state plus a manifest, while

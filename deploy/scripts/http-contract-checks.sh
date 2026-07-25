@@ -63,9 +63,9 @@ check_unauthenticated_http_contracts() {
 
   if [ -n "${docs_base}" ]; then
     expect_http_status GET "${docs_base}/healthz" 200
-    expect_http_status GET "${docs_base}/v1/status" 200
-    expect_http_status POST "${docs_base}/v1/current" 401 '<!doctype html><title>unauthorized</title>'
-    expect_http_status GET "${docs_base}/v1/export" 401
+    expect_http_status GET "${docs_base}/status" 200
+    expect_http_status POST "${docs_base}/current" 401 '<!doctype html><title>unauthorized</title>'
+    expect_http_status GET "${docs_base}/export" 401
   fi
 
   if [ -n "${identity_base}" ]; then
@@ -79,10 +79,9 @@ check_unauthenticated_http_contracts() {
 
   if [ -n "${diagnostics_base}" ]; then
     expect_http_status GET "${diagnostics_base}/healthz" 200
-    expect_http_status GET "${diagnostics_base}/v1/status" 200
-    expect_http_status GET "${diagnostics_base}/v1/runs" 401
-    expect_http_status GET "${diagnostics_base}/v1/export" 401
-    expect_http_status GET "${diagnostics_base}/v2/reports" 401
+    expect_http_status GET "${diagnostics_base}/status" 200
+    expect_http_status GET "${diagnostics_base}/reports" 401
+    expect_http_status GET "${diagnostics_base}/export" 401
   fi
 }
 

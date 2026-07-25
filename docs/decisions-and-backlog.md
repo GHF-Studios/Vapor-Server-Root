@@ -67,10 +67,9 @@ while the implementation is still moving quickly.
 ## Current scaffold behavior
 
 - Homepage serves public homepage/legal placeholder routes and health.
-- Docs serves health, token-protected current-docs compatibility upload,
-  immutable source-level release directories, explicit release promotion, and
-  token-protected export scaffolds. The legacy upload routes create or reuse a
-  content-derived release and promote it so existing scripts keep working.
+- Docs serves health, token-protected current-docs upload, archive upload, and
+  token-protected export scaffolds. It intentionally owns only the currently
+  served docs tree in this pre-alpha slice.
 - Identity serves health/status plus token-protected init/export scaffolds
   backed by SQLite/SQLx schema bootstrap. It has fail-closed Steam Web API
   ticket verification, Steam OpenID browser login, GitHub OAuth token
@@ -85,11 +84,10 @@ while the implementation is still moving quickly.
   external-identity target model, refuses to revoke the last active `root`, and
   records audit events visible to root/admin operators.
 - Diagnostics accepts unauthenticated upload scaffolds and keeps list/download/
-  export behind an admin token for now. Source now includes an additive v2
-  structured JSON report route with explicit consent, allowlisted text
-  artifacts, collision-resistant run ids, stronger redaction, and a
-  non-destructive aggregate storage quota. The legacy v1 text-upload route
-  remains available and uses the same redaction/storage core.
+  export behind an admin token for now. Source now includes one structured JSON
+  report route with explicit consent, allowlisted text artifacts,
+  collision-resistant run ids, stronger redaction, and a non-destructive
+  aggregate storage quota.
 - `Vapor-Server-Root` tracks the services as root-level submodules named after
   their repositories. Normal local development should use those submodule
   worktrees, not separate sibling checkouts.
@@ -121,12 +119,12 @@ while the implementation is still moving quickly.
   state that should be queryable.
 - Evolve export/import bundle formats for docs, identity, and diagnostics beyond
   the initial root-level file-state bundle.
-- Deploy and verify the Docs immutable-release source slice, then decide whether
-  the next docs step is release-only upload, release-and-promote CLI ergonomics,
-  or a service-owned streamed export/import format.
-- Deploy and verify the diagnostics v2 source slice, then decide whether the
-  next diagnostics step is richer operator listing/download UX, identity-root
-  authorization, or an explicit service-owned export/import bundle.
+- Deploy and verify the simplified Docs current-publication source slice, then
+  decide whether the next docs step is identity-root authorization, richer docs
+  publishing UX, or a service-owned streamed export/import format.
+- Decide whether the next diagnostics step is richer operator listing/download
+  UX, identity-root authorization, or an explicit service-owned export/import
+  bundle.
 - Move docs, diagnostics list/download/export, and other privileged service
   APIs from placeholder tokens/admin tokens toward identity-root authorization
   once `docs/cross-service-authorization-contract.md` is implemented.

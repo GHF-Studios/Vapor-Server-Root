@@ -117,5 +117,5 @@ curl -fsS \
   -X POST \
   -H "Authorization: Bearer ${VAPOR_DOCS_ADMIN_TOKEN}" \
   --data-binary "@${tmp}" \
-  http://127.0.0.1:7112/v1/current.tar.gz
+  http://127.0.0.1:7112/current.tar.gz
 ' < "${BUNDLE}"

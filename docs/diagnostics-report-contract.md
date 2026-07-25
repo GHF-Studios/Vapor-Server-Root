@@ -1,31 +1,23 @@
-# Diagnostics report contract v2
+# Diagnostics report contract
 
-Status: source-level contract. It does not claim that the live VPS is already
-running this version.
+Status: current source-level contract. This is pre-alpha and intentionally not a
+stable public API promise.
 
 ## Purpose
 
 Diagnostics are an explicit opt-in support path. They are not telemetry and not
 a machine fingerprinting system.
 
-The v2 contract gives the client a structured upload shape while preserving the
-legacy v1 text-upload route during migration.
-
-## Upload routes
+## Upload route
 
 ```text
-POST /api/diagnostics/v1/runs
-POST /api/diagnostics/v2/reports
+POST /api/diagnostics/reports
 ```
 
-`POST /v1/runs` accepts legacy plain text and stores it through the same
-redaction/storage core as v2.
-
-`POST /v2/reports` accepts JSON:
+Request:
 
 ```json
 {
-  "schema_version": 2,
   "consent": true,
   "client_version": "local-build-id",
   "platform": {
@@ -82,8 +74,7 @@ runs/
 Raw request bodies are not retained. The stored log is normalized and redacted
 before it is written.
 
-`metadata.json` is canonical for v2. `metadata.toml` remains as an
-operator-readable compatibility summary.
+`metadata.json` is canonical. `metadata.toml` is an operator-readable summary.
 
 ## Redaction contract
 
@@ -107,7 +98,7 @@ text can never appear. Clients should avoid sending secrets in the first place.
 The default is 256 MiB. Exceeding the quota rejects the new upload without
 deleting existing reports.
 
-Automatic destructive retention is intentionally not part of this contract yet.
+Automatic destructive retention is not part of the current contract.
 
 ## Read/export authority
 

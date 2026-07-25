@@ -3,19 +3,14 @@ set -euo pipefail
 
 usage() {
   cat >&2 <<'USAGE'
-usage:
-  upload-docs-via-http.sh --bundle PATH --base-url URL [--token-env NAME] [--token-file PATH]
-  upload-docs-via-http.sh --promote-release RELEASE_ID --base-url URL [--token-env NAME] [--token-file PATH]
+usage: upload-docs-via-http.sh --bundle PATH --base-url URL [--token-env NAME] [--token-file PATH]
 
 Uploads a docs tar.gz bundle to a public Vapor docs route, for example:
 
   http://82.165.77.104/docs
 
-The script posts to BASE_URL/v1/current.tar.gz. The docs admin token is read
-from an environment variable by default; do not pass it on the command line.
-
-With --promote-release, the script promotes an existing release through
-BASE_URL/v1/releases/RELEASE_ID/promote. Promotion can be used for rollback.
+The script posts to BASE_URL/current.tar.gz. The docs admin token is read from
+an environment variable by default; do not pass it on the command line.
 USAGE
 }
 
@@ -23,7 +18,6 @@ BUNDLE=""
 BASE_URL=""
 TOKEN_ENV="VAPOR_DOCS_ADMIN_TOKEN"
 TOKEN_FILE=""
-PROMOTE_RELEASE=""
 
 while [ "$#" -gt 0 ]; do
   case "$1" in
@@ -59,14 +53,6 @@ while [ "$#" -gt 0 ]; do
       TOKEN_FILE="$2"
       shift 2
       ;;
-    --promote-release)
-      if [ "$#" -lt 2 ]; then
-        usage
-        exit 2
-      fi
-      PROMOTE_RELEASE="$2"
-      shift 2
-      ;;
     -h|--help)
       usage
       exit 0
@@ -78,31 +64,14 @@ while [ "$#" -gt 0 ]; do
   esac
 done
 
-if [ -z "${BASE_URL}" ]; then
+if [ -z "${BUNDLE}" ] || [ -z "${BASE_URL}" ]; then
   usage
   exit 2
 fi
 
-if [ -z "${BUNDLE}" ] && [ -z "${PROMOTE_RELEASE}" ]; then
-  usage
-  exit 2
-fi
-
-if [ -n "${BUNDLE}" ] && [ -n "${PROMOTE_RELEASE}" ]; then
-  echo "error: use either --bundle or --promote-release, not both" >&2
-  exit 2
-fi
-
-if [ -n "${BUNDLE}" ] && [ ! -f "${BUNDLE}" ]; then
+if [ ! -f "${BUNDLE}" ]; then
   echo "error: bundle does not exist: ${BUNDLE}" >&2
   exit 1
-fi
-
-if [ -n "${PROMOTE_RELEASE}" ]; then
-  if [[ ! "${PROMOTE_RELEASE}" =~ ^([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9._-]{0,94}[A-Za-z0-9])$ ]]; then
-    echo "error: invalid release id: ${PROMOTE_RELEASE}" >&2
-    exit 2
-  fi
 fi
 
 if [ -n "${TOKEN_FILE}" ]; then
@@ -120,15 +89,8 @@ if [ -z "${TOKEN}" ]; then
   exit 1
 fi
 
-if [ -n "${PROMOTE_RELEASE}" ]; then
-  curl -fsS \
-    -X POST \
-    -H "Authorization: Bearer ${TOKEN}" \
-    "${BASE_URL}/v1/releases/${PROMOTE_RELEASE}/promote"
-else
-  curl -fsS \
-    -X POST \
-    -H "Authorization: Bearer ${TOKEN}" \
-    --data-binary "@${BUNDLE}" \
-    "${BASE_URL}/v1/current.tar.gz"
-fi
+curl -fsS \
+  -X POST \
+  -H "Authorization: Bearer ${TOKEN}" \
+  --data-binary "@${BUNDLE}" \
+  "${BASE_URL}/current.tar.gz"

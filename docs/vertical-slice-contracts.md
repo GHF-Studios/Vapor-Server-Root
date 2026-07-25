@@ -55,7 +55,7 @@ service business logic unless a shared library is deliberately introduced.
 /api/diagnostics/         diagnostics service API
 ```
 
-Every stateful service should expose a public, secret-free `/v1/status` probe
+Every stateful service should expose a public, secret-free status probe
 that reports readiness and temporary auth model without leaking tokens.
 
 Temporary pre-DNS HTTP-by-IP access exists only for the current setup phase. The
@@ -78,8 +78,8 @@ intended long-lived public origin is `https://vapor.ghf-studios.site`.
 | Capability | Required authority |
 | --- | --- |
 | View public homepage/docs | none |
-| Upload/promote docs | docs upload token for now; future root/pipeline auth |
-| Upload diagnostics | explicit opt-in client upload; v1 legacy text and v2 structured JSON |
+| Publish docs | docs upload token for now; future root/pipeline auth |
+| Upload diagnostics | explicit opt-in structured JSON report upload |
 | List/download diagnostics | diagnostics admin token for now; future identity-root session |
 | Create Steam player profile | Steam OpenID browser proof |
 | Link GitHub | existing Steam session + GitHub OAuth proof |
@@ -155,9 +155,8 @@ unsupported manifest versions, duplicate entries, and any manifest that does not
 assert `secrets_included = false`. See
 `docs/operations-evidence-and-recovery-contract.md`.
 
-Diagnostics source now defines a v2 report contract for structured, explicit
-opt-in JSON uploads while preserving the v1 text-upload route. The v2 storage
-shape is:
+Diagnostics source now defines the current report contract for structured,
+explicit opt-in JSON uploads. The storage shape is:
 
 ```text
 /var/lib/vapor-server/diagnostics/runs/
@@ -167,25 +166,24 @@ shape is:
     vapor.log
 ```
 
-See `docs/diagnostics-report-contract-v2.md` for schema, redaction, quota, and
+See `docs/diagnostics-report-contract.md` for schema, redaction, quota, and
 privacy rules. This source-level contract should not be read as a live VPS
 deployment claim until `docs/deployment-status.md` is updated after verification.
 
-Docs source now defines immutable release directories and explicit promotion
-while preserving the legacy `/v1/current` and `/v1/current.tar.gz` upload
-routes. The source-level state shape is:
+Docs source now defines a single current documentation tree. The source-level
+state shape is:
 
 ```text
 /var/lib/vapor-server/docs/
-  releases/<release-id>/release.toml
-  releases/<release-id>/site/
-  current.txt
   current/
+    index.html
+    metadata.toml
+    ...
 ```
 
-See `docs/docs-release-publication-contract.md` for release, promotion,
-rollback, validation, and export semantics. This is likewise not a live VPS
-deployment claim until verified and recorded in `docs/deployment-status.md`.
+See `docs/docs-publication-contract.md` for publication, validation, and export
+semantics. This is likewise not a live VPS deployment claim until verified and
+recorded in `docs/deployment-status.md`.
 
 ## Deployment contract
 
@@ -220,11 +218,11 @@ Minimum checks before claiming the stack is good:
 - removed legacy routes return `404`;
 - profile listings do not expose internal profile ids;
 - diagnostics smoke upload redacts obvious secrets;
-- diagnostics v2 smoke upload accepts structured explicit-consent JSON, stores
+- diagnostics smoke upload accepts structured explicit-consent JSON, stores
   redacted output, and does not echo distinctive fake secret values;
 - docs route serves the current docs bundle;
-- docs smoke upload creates/promotes a release and status reports the current
-  release pointer;
+- docs smoke upload replaces the current tree and status reports that current
+  docs are ready;
 - state export excludes `/etc/vapor-server` secrets;
 - restore rejects structurally unsafe state bundles before extraction;
 - automatic state-export timer is enabled and active.
@@ -239,9 +237,9 @@ These are not reasons to stop; they are the next places to widen the pipe.
   contract exists yet.
 - Docs and diagnostics still use token/admin-token scaffolds rather than
   identity-root authorization.
-- Docs immutable release semantics exist in source; protected publication still
+- Docs current-tree publication exists in source; protected publication still
   uses the token scaffold until identity/pipeline authorization is implemented.
-- Diagnostics v2 schema, quota, and redaction source contract exists; identity
+- Diagnostics schema, quota, and redaction source contract exists; identity
   authorization for diagnostics read/export is still pending.
 - Restore/import has a root-level file-state path but service-owned import
   formats are not mature.

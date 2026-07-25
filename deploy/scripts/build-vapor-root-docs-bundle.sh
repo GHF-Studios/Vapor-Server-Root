@@ -6,7 +6,7 @@ usage() {
 usage: build-vapor-root-docs-bundle.sh --vapor-root PATH [--output PATH]
 
 Builds a curated Vapor-Root docs site bundle as a tar.gz archive suitable for
-uploading to Vapor-Docs-Server /v1/current.tar.gz.
+uploading to Vapor-Docs-Server /current.tar.gz.
 
 The bundle intentionally excludes .agents, raw planning intake, local state,
 targets, provider toolchains, credentials, and other non-public operational
