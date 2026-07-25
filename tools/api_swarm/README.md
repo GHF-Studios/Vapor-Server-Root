@@ -17,6 +17,12 @@ The default run:
   guard;
 - does not deploy, SSH, inspect secrets, or mutate Vapor source files.
 
+The `implementation-campaign` profile is the second-phase mode. It includes a
+larger source/deployment context and asks source-aware workers for patch-ready
+vertical-slice plans across diagnostics, docs, identity, recovery, cutover prep,
+publishing boundaries, and QA. The API workers still remain read-only; Codex
+reviews and applies any resulting repository changes separately.
+
 Outputs default to:
 
 ```text
@@ -80,6 +86,24 @@ bash tools/api_swarm/run_swarm.sh --profile balanced --dry-run
 
 # Exhaustive prompt-pack run: 14 workers + 2 managers.
 bash tools/api_swarm/run_swarm.sh --profile full --dry-run
+
+# Source-aware implementation campaign: 12 workers + 2 managers.
+bash tools/api_swarm/run_swarm.sh \
+  --profile implementation-campaign \
+  --extra-context-file ~/Documents/AGENT_NOTES/api_swarm_runs/20260725T004853Z/manager-02-final-synthesis.md \
+  --worker-model gpt-5.6-sol \
+  --manager-model gpt-5.6-sol \
+  --max-budget-usd 8.35 \
+  --dry-run
+
+# Same campaign with cheaper workers and Sol managers.
+bash tools/api_swarm/run_swarm.sh \
+  --profile implementation-campaign \
+  --extra-context-file ~/Documents/AGENT_NOTES/api_swarm_runs/20260725T004853Z/manager-02-final-synthesis.md \
+  --worker-model gpt-5.6-terra \
+  --manager-model gpt-5.6-sol \
+  --max-budget-usd 6.00 \
+  --dry-run
 
 # Use a different prompt-pack directory.
 bash tools/api_swarm/run_swarm.sh --prompt-pack-dir /path/to/AGENT_NOTES --dry-run

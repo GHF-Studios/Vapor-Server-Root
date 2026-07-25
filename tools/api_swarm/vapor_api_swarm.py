@@ -45,6 +45,11 @@ PROFILE_DESCRIPTIONS: dict[str, str] = {
         "16 calls: one worker per non-manager prompt file plus Sol security QA "
         "and final synthesis. Most exhaustive prompt-pack run."
     ),
+    "implementation-campaign": (
+        "14 calls: 12 source-aware workers plus Sol implementation QA and final "
+        "integration manager. Targets concrete vertical-slice changes, tests, "
+        "docs alignment, and safe sequencing."
+    ),
 }
 
 CONTEXT_FILES: tuple[str, ...] = (
@@ -60,6 +65,76 @@ CONTEXT_FILES: tuple[str, ...] = (
     "Vapor-Diagnostics-Server/src/main.rs",
 )
 
+IMPLEMENTATION_CONTEXT_FILES: tuple[str, ...] = (
+    "README.md",
+    "server-root.toml",
+    ".gitmodules",
+    ".github/workflows/deploy.yml",
+    "docs/server-domain-boundaries.md",
+    "docs/steam-authority-model.md",
+    "docs/publish-pipeline-authority-model.md",
+    "deploy/caddy/Caddyfile.example",
+    "deploy/caddy/Caddyfile.template",
+    "deploy/systemd/README.md",
+    "deploy/systemd/vapor-homepage.service",
+    "deploy/systemd/vapor-docs.service",
+    "deploy/systemd/vapor-identity.service",
+    "deploy/systemd/vapor-diagnostics.service",
+    "deploy/systemd/vapor-deploy.service",
+    "deploy/systemd/vapor-deploy.timer",
+    "deploy/systemd/vapor-state-export.service",
+    "deploy/systemd/vapor-state-export.timer",
+    "deploy/scripts/lib.sh",
+    "deploy/scripts/bootstrap-ubuntu.sh",
+    "deploy/scripts/install-systemd.sh",
+    "deploy/scripts/install-caddy.sh",
+    "deploy/scripts/deploy.sh",
+    "deploy/scripts/health-check.sh",
+    "deploy/scripts/public-http-check.sh",
+    "deploy/scripts/smoke-docs-upload.sh",
+    "deploy/scripts/smoke-diagnostics.sh",
+    "deploy/scripts/install-auto-deploy.sh",
+    "deploy/scripts/export-state.sh",
+    "deploy/scripts/restore-state.sh",
+    "deploy/scripts/build-vapor-root-docs-bundle.sh",
+    "deploy/scripts/upload-docs-via-http.sh",
+    "deploy/scripts/deploy-vapor-root-docs.sh",
+    "deploy/scripts/smoke-identity-auth.sh",
+    "deploy/scripts/grant-identity-role.sh",
+    "deploy/scripts/revoke-identity-role.sh",
+    "deploy/scripts/list-identity-audit.sh",
+    "deploy/scripts/install-state-backup.sh",
+    "Vapor-Homepage-Server/AGENTS.md",
+    "Vapor-Homepage-Server/README.md",
+    "Vapor-Homepage-Server/Cargo.toml",
+    "Vapor-Homepage-Server/src/main.rs",
+    "Vapor-Docs-Server/AGENTS.md",
+    "Vapor-Docs-Server/README.md",
+    "Vapor-Docs-Server/Cargo.toml",
+    "Vapor-Docs-Server/src/main.rs",
+    "Vapor-Identity-Server/AGENTS.md",
+    "Vapor-Identity-Server/README.md",
+    "Vapor-Identity-Server/Cargo.toml",
+    "Vapor-Identity-Server/src/main.rs",
+    "Vapor-Identity-Server/src/config.rs",
+    "Vapor-Identity-Server/src/types.rs",
+    "Vapor-Identity-Server/src/api_handlers.rs",
+    "Vapor-Identity-Server/src/browser_handlers.rs",
+    "Vapor-Identity-Server/src/db.rs",
+    "Vapor-Identity-Server/src/auth_attempts.rs",
+    "Vapor-Identity-Server/src/profiles.rs",
+    "Vapor-Identity-Server/src/providers.rs",
+    "Vapor-Identity-Server/src/util.rs",
+    "Vapor-Identity-Server/src/persistence.rs",
+    "Vapor-Identity-Server/src/status_handlers.rs",
+    "Vapor-Identity-Server/src/session_handlers.rs",
+    "Vapor-Identity-Server/src/provider_handlers.rs",
+    "Vapor-Identity-Server/src/admin_handlers.rs",
+    "Vapor-Diagnostics-Server/README.md",
+    "Vapor-Diagnostics-Server/Cargo.toml",
+    "Vapor-Diagnostics-Server/src/main.rs",
+)
+
 SHARED_SYSTEM_PROMPT = """\
 You are an API-funded read-only architecture worker for Vapor server planning.
 
@@ -71,9 +146,15 @@ Hard rules:
 - Treat checked-in repo docs/source context as implemented or documented state.
 - Treat future services as speculative unless the context says they already exist.
 - Preserve clear service/domain/authority boundaries.
+- Prefer real vertical-slice implementation plans over abstract speculation.
 - Prefer minimal future boundaries over fake implementation scaffolding.
+- It is acceptable to propose early high-level repositories or modules when the
+  boundary is genuinely clear, but do not fill them with speculative framework
+  code.
 - If a responsibility does not fit an existing service, name the missing domain
   or reject the responsibility.
+- When asked for implementation work, produce patch-ready guidance: exact files,
+  functions, data shapes, tests, risks, and rollback notes.
 
 Output concise markdown with concrete architecture judgment. Do not include long
 quotes from the input context.
@@ -195,6 +276,25 @@ def parse_args() -> argparse.Namespace:
         ),
     )
     parser.add_argument(
+        "--include-source-context",
+        action="store_true",
+        help=(
+            "Include source files, deployment scripts, workflow config, and "
+            "service READMEs in addition to the required handoff context. "
+            "Automatically enabled by --profile implementation-campaign."
+        ),
+    )
+    parser.add_argument(
+        "--extra-context-file",
+        type=Path,
+        action="append",
+        default=[],
+        help=(
+            "Add an extra read-only context file, such as a prior swarm synthesis. "
+            "May be passed more than once."
+        ),
+    )
+    parser.add_argument(
         "--profile",
         default="balanced",
         choices=sorted(PROFILE_DESCRIPTIONS),
@@ -275,11 +375,19 @@ def read_api_key(key_file: Path) -> str:
     return ""
 
 
-def load_context(repo_root: Path) -> tuple[str, list[dict[str, Any]]]:
+def load_context(
+    repo_root: Path,
+    *,
+    include_source_context: bool,
+    extra_context_files: list[Path],
+) -> tuple[str, list[dict[str, Any]]]:
     sections: list[str] = []
     manifest: list[dict[str, Any]] = []
+    relative_files = list(dict.fromkeys(CONTEXT_FILES))
+    if include_source_context:
+        relative_files = list(dict.fromkeys(relative_files + list(IMPLEMENTATION_CONTEXT_FILES)))
 
-    for relative in CONTEXT_FILES:
+    for relative in relative_files:
         path = repo_root / relative
         if not path.exists():
             raise FileNotFoundError(f"Required context file missing: {path}")
@@ -288,6 +396,21 @@ def load_context(repo_root: Path) -> tuple[str, list[dict[str, Any]]]:
         manifest.append(
             {
                 "path": relative,
+                "bytes": len(text.encode("utf-8")),
+                "approx_tokens": approximate_tokens(text),
+            }
+        )
+
+    for extra_file in extra_context_files:
+        path = extra_file.expanduser().resolve()
+        if not path.exists():
+            raise FileNotFoundError(f"Extra context file missing: {path}")
+        text = path.read_text(encoding="utf-8", errors="replace")
+        label = f"extra:{path}"
+        sections.append(f"\n\n===== FILE: {label} =====\n{text}")
+        manifest.append(
+            {
+                "path": label,
                 "bytes": len(text.encode("utf-8")),
                 "approx_tokens": approximate_tokens(text),
             }
@@ -340,6 +463,9 @@ def make_worker_specs(
     worker_model: str,
     effort: str,
 ) -> list[AgentSpec]:
+    if profile == "implementation-campaign":
+        return make_implementation_worker_specs(worker_model, effort)
+
     prompt_groups = worker_prompt_groups(profile)
     return [
         AgentSpec(
@@ -352,6 +478,176 @@ def make_worker_specs(
             source_prompts=prompts,
         )
         for index, (slug, title, prompts) in enumerate(prompt_groups, start=1)
+    ]
+
+
+def make_implementation_worker_specs(worker_model: str, effort: str) -> list[AgentSpec]:
+    tasks: list[tuple[str, str, str]] = [
+        (
+            "diagnostics-v2",
+            "Diagnostics v2 vertical slice",
+            """\
+Task: Produce a patch-ready plan for the next Diagnostics vertical slice.
+
+Target concrete service code in Vapor-Diagnostics-Server and matching root
+smoke tests/docs. Keep upload explicit opt-in and do not add hostnames or
+persistent machine identifiers. Prefer small, testable Rust changes that improve
+schema, run IDs, listing, redaction, retention, and operator ergonomics without
+requiring identity integration first.
+""",
+        ),
+        (
+            "diagnostics-auth",
+            "Diagnostics authorization migration path",
+            """\
+Task: Produce a patch-ready plan for moving Diagnostics read/list/export from
+admin-token scaffolding toward identity-root authorization.
+
+Do not require the migration to happen in one commit. Identify the smallest safe
+intermediate implementation: headers/claims accepted, fail-closed behavior,
+status reporting, tests, and documentation. Preserve bootstrap/emergency token
+semantics until a real cross-service auth contract exists.
+""",
+        ),
+        (
+            "docs-release",
+            "Docs release/current vertical slice",
+            """\
+Task: Produce a patch-ready plan for improving Vapor-Docs-Server from mutable
+current upload toward immutable releases plus controlled current-pointer
+promotion.
+
+Target exact changes in Vapor-Docs-Server/src/main.rs, README, root docs upload
+scripts, and smoke tests. Keep the slice small enough to implement locally:
+release IDs, metadata/digests, current pointer, rollback/export behavior, and
+tests.
+""",
+        ),
+        (
+            "identity-assertions",
+            "Identity cross-service assertion slice",
+            """\
+Task: Produce a patch-ready plan for the first identity-issued authorization
+surface usable by docs/diagnostics later.
+
+Use current Identity code as source context. Preserve SteamID64 + GitHub login
+as operator-facing authority, hide internal profile IDs, and avoid JWT/tooling
+overreach unless justified. Specify endpoint/data shape, expiry/audience,
+failure behavior, tests, and which services consume it in later commits.
+""",
+        ),
+        (
+            "identity-admin-ux",
+            "Identity admin ergonomics",
+            """\
+Task: Produce a patch-ready plan for improving current identity root/admin
+operator ergonomics without changing core authority rules.
+
+Focus browser/dashboard and scripts: role grant/revoke/list audit, clear
+operator-facing SteamID64/GitHub identifiers, last-root protection messaging,
+tests, and docs. Avoid exposing internal profile IDs.
+""",
+        ),
+        (
+            "ops-recovery",
+            "Operations evidence and recovery vertical slice",
+            """\
+Task: Produce a patch-ready plan for hardening local backup/export/restore
+evidence in Vapor-Server-Root without touching the live VPS.
+
+Target deploy/scripts/export-state.sh, restore-state.sh, install-state-backup.sh,
+deployment-status/docs, and smoke tests. Include manifest checks,
+service-by-service evidence, retention behavior, dry-run/verify commands, and
+rollback notes.
+""",
+        ),
+        (
+            "deploy-cutover",
+            "DNS/HTTPS cutover preparation",
+            """\
+Task: Produce a patch-ready plan for preparing DNS/HTTPS cutover without doing
+the live cutover.
+
+Target Caddy templates, deployment docs, smoke checks, secure-cookie docs, and
+branch protection/GitHub deployment docs. Separate pre-DNS HTTP behavior from
+future HTTPS behavior with exact operator verification steps.
+""",
+        ),
+        (
+            "server-shell",
+            "Vapor Shell server wrapper contract",
+            """\
+Task: Produce a patch-ready plan for server-operation wrappers that Vapor Shell
+can later implement.
+
+Do not assume Vapor Shell source is in this repo. Define command contracts,
+underlying server/root script/API targets, authentication boundaries, expected
+outputs, and a staged implementation order. Identify any small root-side changes
+that make wrappers easier and are safe now.
+""",
+        ),
+        (
+            "publishing-seed",
+            "Publishing authority seed slice",
+            """\
+Task: Produce a patch-ready plan for seeding publishing/pipeline authority
+without prematurely implementing Steam credential custody or pipeline execution.
+
+Use the current publish-pipeline authority docs as context. Identify exact docs,
+state roots, route reservations to avoid or define, audit/event shape, tests, and
+minimal repository-boundary decision records that would unblock later work.
+""",
+        ),
+        (
+            "artifact-registry-toolchain",
+            "Artifact, registry, and toolchain trigger plan",
+            """\
+Task: Produce a patch-ready plan for artifact storage, registry/catalog, and
+toolchain authority triggers.
+
+Do not implement fake services. Specify when each boundary becomes real, what
+minimal files/repos/manifests would be justified, how they relate to docs and
+publishing, and what root docs/backlog changes should happen now.
+""",
+        ),
+        (
+            "qa-tests",
+            "Cross-service QA and test expansion",
+            """\
+Task: Produce a patch-ready QA plan across root scripts, Docs, Diagnostics, and
+Identity.
+
+Identify concrete missing tests, low-risk test additions, commands to run, smoke
+check improvements, and invariants to preserve. Prefer tests that can run
+locally without SSH, secrets, or live DNS.
+""",
+        ),
+        (
+            "integration-order",
+            "Ambitious integration order",
+            """\
+Task: Produce an implementation campaign plan that sequences all safe changes
+from this run into commits.
+
+Be aggressive but realistic. Separate immediate local code/docs changes, changes
+requiring user/domain/VPS authority, and speculative future boundaries. Include
+which submodule gets which commit, root submodule pointer updates, validation,
+and rollback anchors.
+""",
+        ),
+    ]
+
+    return [
+        AgentSpec(
+            agent_id=f"worker-{index:02}-{slug}",
+            title=title,
+            model=worker_model,
+            reasoning_effort=effort,
+            max_output_tokens=4300,
+            task=task.strip(),
+            source_prompts=(),
+        )
+        for index, (slug, title, task) in enumerate(tasks, start=1)
     ]
 
 
@@ -420,7 +716,50 @@ def make_manager_specs(
     prompt_pack: PromptPack,
     manager_model: str,
     effort: str,
+    profile: str,
 ) -> list[AgentSpec]:
+    if profile == "implementation-campaign":
+        return [
+            AgentSpec(
+                agent_id="manager-01-implementation-security-qa",
+                title="Implementation security and feasibility QA",
+                model=manager_model,
+                reasoning_effort=effort,
+                max_output_tokens=5600,
+                task="""\
+Review all worker reports for security, authority, privacy, implementation
+feasibility, and scope control.
+
+Reject changes that would expose secrets, touch the live VPS, weaken identity
+boundaries, collect hostname/persistent machine identifiers, collapse future
+domains into existing services, or require speculative frameworks. Identify the
+highest-value safe local patches and the tests required before commit.
+""",
+            ),
+            AgentSpec(
+                agent_id="manager-02-final-implementation-plan",
+                title="Final implementation campaign synthesis",
+                model=manager_model,
+                reasoning_effort=effort,
+                max_output_tokens=6500,
+                task="""\
+Produce the final implementation campaign for Codex to apply.
+
+Return:
+1. exact local changes to implement now, grouped by repo;
+2. exact docs/contracts to update now;
+3. exact tests/checks to run;
+4. commit sequence and submodule pointer handling;
+5. rollback notes;
+6. deferred changes requiring user/VPS/DNS/secret authority;
+7. speculative future work to keep out of this patch set.
+
+Prioritize an ambitious but safe vertical-stack widening over purely conceptual
+documentation. Be specific enough that a code agent can start editing files.
+""",
+            ),
+        ]
+
     return [
         AgentSpec(
             agent_id="manager-01-security-authority-qa",
@@ -445,6 +784,34 @@ def make_manager_specs(
 
 def build_worker_input(context: str, prompt_pack: PromptPack, spec: AgentSpec) -> str:
     assigned_prompts = prompt_pack.selected_text(spec.source_prompts)
+    if not spec.source_prompts:
+        return f"""\
+<vapor_context>
+{context}
+</vapor_context>
+
+<manual_swarm_prompt_base>
+{prompt_pack.base_text}
+</manual_swarm_prompt_base>
+
+<task>
+{spec.task}
+</task>
+
+Return markdown with these headings:
+
+1. Scope
+2. Current implementation facts
+3. Proposed local changes
+4. Exact files and functions to edit
+5. Data/API/CLI contract changes
+6. Tests to add or update
+7. Security, privacy, and authority checks
+8. Rollback and compatibility notes
+9. Deferred work
+10. Apply-order recommendation
+"""
+
     return f"""\
 <vapor_context>
 {context}
@@ -745,6 +1112,11 @@ def print_dry_run(
     print(f"Output dir: {output_dir}")
     print(f"Profile: {args.profile} — {PROFILE_DESCRIPTIONS[args.profile]}")
     print(f"Prompt pack: {prompt_pack.source_dir}")
+    print(f"Source context included: {args.include_source_context or args.profile == 'implementation-campaign'}")
+    if args.extra_context_file:
+        print("Extra context files:")
+        for path in args.extra_context_file:
+            print(f"- {path}")
     print(f"Budget guard: ${args.max_budget_usd:.2f}")
     print(f"Approx shared context tokens per call: {total_context_tokens:,}")
     print(
@@ -782,7 +1154,7 @@ def print_dry_run(
         print(
             f"- {spec.agent_id}: {spec.title} "
             f"[{spec.model}, {spec.reasoning_effort}] "
-            f"prompts={','.join(item['source_prompts'])} "
+            f"prompts={','.join(item['source_prompts']) or '(custom task)'} "
             f"in~{item['estimated_input_tokens']:,} "
             f"out≤{item['max_output_tokens']:,} "
             f"cost≤${item['worst_case_cost_usd']:.4f}"
@@ -793,7 +1165,7 @@ def print_dry_run(
         print(
             f"- {spec.agent_id}: {spec.title} "
             f"[{spec.model}, {spec.reasoning_effort}] "
-            f"prompts={','.join(item['source_prompts'])} "
+            f"prompts={','.join(item['source_prompts']) or '(custom task)'} "
             f"in~{item['estimated_input_tokens']:,} "
             f"out≤{item['max_output_tokens']:,} "
             f"cost≤${item['worst_case_cost_usd']:.4f}"
@@ -840,7 +1212,12 @@ async def async_main() -> int:
     logger = Logger(output_dir / "run.log")
     logger.write("INIT", f"Output directory: {output_dir}")
 
-    context, context_manifest = load_context(repo_root)
+    include_source_context = args.include_source_context or args.profile == "implementation-campaign"
+    context, context_manifest = load_context(
+        repo_root,
+        include_source_context=include_source_context,
+        extra_context_files=args.extra_context_file,
+    )
     prompt_pack = load_prompt_pack(args.prompt_pack_dir)
     workers = make_worker_specs(
         profile=args.profile,
@@ -848,7 +1225,12 @@ async def async_main() -> int:
         worker_model=args.worker_model,
         effort=args.worker_effort,
     )
-    managers = make_manager_specs(prompt_pack, args.manager_model, args.manager_effort)
+    managers = make_manager_specs(
+        prompt_pack,
+        args.manager_model,
+        args.manager_effort,
+        args.profile,
+    )
     planned = planned_call_estimates(context, prompt_pack, workers, managers)
     planned_total_cost = sum(item["worst_case_cost_usd"] for item in planned)
 
@@ -861,6 +1243,8 @@ async def async_main() -> int:
             "prompt_pack_dir": str(prompt_pack.source_dir),
             "profile": args.profile,
             "profile_description": PROFILE_DESCRIPTIONS[args.profile],
+            "include_source_context": include_source_context,
+            "extra_context_files": [str(path) for path in args.extra_context_file],
             "max_budget_usd": args.max_budget_usd,
             "worker_model": args.worker_model,
             "manager_model": args.manager_model,
