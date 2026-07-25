@@ -342,6 +342,18 @@ def parse_args() -> argparse.Namespace:
         help="Maximum concurrent worker API calls. Default: 10.",
     )
     parser.add_argument(
+        "--max-retries",
+        type=int,
+        default=4,
+        help="Retry count for transient API failures such as TPM rate limits. Default: 4.",
+    )
+    parser.add_argument(
+        "--retry-delay-seconds",
+        type=float,
+        default=8.0,
+        help="Base retry delay for transient API failures. Default: 8.0.",
+    )
+    parser.add_argument(
         "--dry-run",
         action="store_true",
         help="Print plan and context sizes without making API calls.",
@@ -929,6 +941,28 @@ def response_to_json(response: Any) -> str:
     return json.dumps(str(response), indent=2)
 
 
+def retry_after_seconds(error: Exception, fallback: float, attempt: int) -> float:
+    text = str(error)
+    match = re.search(r"try again in ([0-9.]+)s", text, re.IGNORECASE)
+    if match:
+        return min(60.0, max(fallback, float(match.group(1)) + 1.0))
+    return min(60.0, fallback * attempt)
+
+
+def retryable_api_error(error: Exception) -> bool:
+    name = type(error).__name__.lower()
+    text = str(error).lower()
+    return (
+        "ratelimit" in name
+        or "rate limit" in text
+        or "429" in text
+        or "timeout" in name
+        or "timeout" in text
+        or "temporarily unavailable" in text
+        or "connection" in text
+    )
+
+
 async def run_agent(
     client: Any,
     spec: AgentSpec,
@@ -936,20 +970,42 @@ async def run_agent(
     output_dir: Path,
     logger: Logger,
     save_raw: bool,
+    max_retries: int,
+    retry_delay_seconds: float,
 ) -> tuple[str, UsageRecord]:
     started = time.monotonic()
     logger.write("START", f"{spec.agent_id}: {spec.title} [{spec.model}, {spec.reasoning_effort}]")
 
-    response = await client.responses.create(
-        model=spec.model,
-        input=[
-            {"role": "system", "content": SHARED_SYSTEM_PROMPT},
-            {"role": "user", "content": user_input},
-        ],
-        reasoning={"effort": spec.reasoning_effort},
-        max_output_tokens=spec.max_output_tokens,
-        text={"verbosity": "medium"},
-    )
+    response = None
+    for attempt in range(1, max_retries + 2):
+        try:
+            response = await client.responses.create(
+                model=spec.model,
+                input=[
+                    {"role": "system", "content": SHARED_SYSTEM_PROMPT},
+                    {"role": "user", "content": user_input},
+                ],
+                reasoning={"effort": spec.reasoning_effort},
+                max_output_tokens=spec.max_output_tokens,
+                text={"verbosity": "medium"},
+            )
+            break
+        except Exception as error:
+            if attempt > max_retries or not retryable_api_error(error):
+                logger.write("ERROR", f"{spec.agent_id}: {type(error).__name__}: {error}")
+                raise
+            delay = retry_after_seconds(error, retry_delay_seconds, attempt)
+            logger.write(
+                "RETRY",
+                (
+                    f"{spec.agent_id}: {type(error).__name__}; "
+                    f"attempt {attempt}/{max_retries}; waiting {delay:.1f}s"
+                ),
+            )
+            await asyncio.sleep(delay)
+
+    if response is None:
+        raise RuntimeError(f"{spec.agent_id}: API call did not return a response")
 
     elapsed = time.monotonic() - started
     text = response_text(response)
@@ -1000,6 +1056,8 @@ async def run_workers(
     output_dir: Path,
     logger: Logger,
     save_raw: bool,
+    max_retries: int,
+    retry_delay_seconds: float,
 ) -> tuple[dict[str, str], list[UsageRecord]]:
     semaphore = asyncio.Semaphore(max(1, concurrency))
     reports: dict[str, str] = {}
@@ -1014,6 +1072,8 @@ async def run_workers(
                 output_dir=output_dir,
                 logger=logger,
                 save_raw=save_raw,
+                max_retries=max_retries,
+                retry_delay_seconds=retry_delay_seconds,
             )
             reports[spec.agent_id] = report
             records.append(record)
@@ -1251,6 +1311,8 @@ async def async_main() -> int:
             "worker_effort": args.worker_effort,
             "manager_effort": args.manager_effort,
             "concurrency": args.concurrency,
+            "max_retries": args.max_retries,
+            "retry_delay_seconds": args.retry_delay_seconds,
             "context_approx_tokens": approximate_tokens(context),
             "planned_worst_case_cost_usd": planned_total_cost,
             "planned_calls": planned,
@@ -1326,6 +1388,8 @@ async def async_main() -> int:
         output_dir=output_dir,
         logger=logger,
         save_raw=args.save_raw,
+        max_retries=args.max_retries,
+        retry_delay_seconds=args.retry_delay_seconds,
     )
     usage_records.extend(worker_records)
     worker_cost = sum(record.estimated_cost_usd for record in worker_records)
@@ -1348,6 +1412,8 @@ async def async_main() -> int:
             output_dir=output_dir,
             logger=logger,
             save_raw=args.save_raw,
+            max_retries=args.max_retries,
+            retry_delay_seconds=args.retry_delay_seconds,
         )
         manager_reports[manager_1.agent_id] = manager_1_report
         usage_records.append(manager_1_record)
@@ -1376,6 +1442,8 @@ async def async_main() -> int:
                 output_dir=output_dir,
                 logger=logger,
                 save_raw=args.save_raw,
+                max_retries=args.max_retries,
+                retry_delay_seconds=args.retry_delay_seconds,
             )
             manager_reports[manager_2.agent_id] = manager_2_report
             usage_records.append(manager_2_record)
