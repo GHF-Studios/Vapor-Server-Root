@@ -83,7 +83,11 @@ while the implementation is still moving quickly.
   external-identity target model, refuses to revoke the last active `root`, and
   records audit events visible to root/admin operators.
 - Diagnostics accepts unauthenticated upload scaffolds and keeps list/download/
-  export behind an admin token for now.
+  export behind an admin token for now. Source now includes an additive v2
+  structured JSON report route with explicit consent, allowlisted text
+  artifacts, collision-resistant run ids, stronger redaction, and a
+  non-destructive aggregate storage quota. The legacy v1 text-upload route
+  remains available and uses the same redaction/storage core.
 - `Vapor-Server-Root` tracks the services as root-level submodules named after
   their repositories. Normal local development should use those submodule
   worktrees, not separate sibling checkouts.
@@ -113,11 +117,12 @@ while the implementation is still moving quickly.
 - Evolve export/import bundle formats for docs, identity, and diagnostics beyond
   the initial root-level file-state bundle.
 - Add docs deployment from a Vapor-owned/root-owned deploy workflow.
-- Define diagnostics upload request schema, redaction contract, size limits,
-  retention policy, and root-dev download/export flow.
+- Deploy and verify the diagnostics v2 source slice, then decide whether the
+  next diagnostics step is richer operator listing/download UX, identity-root
+  authorization, or an explicit service-owned export/import bundle.
 - Move docs, diagnostics list/download/export, and other privileged service
   APIs from placeholder tokens/admin tokens toward identity-root authorization
-  once the cross-service auth contract is explicit.
+  once `docs/cross-service-authorization-contract.md` is implemented.
 - Exercise the Steamworks/Vapor-client ticket path for end-to-end developer auth
   beyond browser OpenID login: client obtains a Steam Web API ticket, server
   verifies it, and developer workflows can rely on the stronger proof.

@@ -74,6 +74,12 @@ decisions, and future/backburner items that should not be lost.
 See `docs/vertical-slice-contracts.md` for the current cross-service contracts:
 routes, auth, state ownership, deployment, smoke checks, and known weak seams.
 
+See `docs/cross-service-authorization-contract.md` for the target identity
+introspection contract that should replace service-local token scaffolds.
+
+See `docs/diagnostics-report-contract-v2.md` for the structured diagnostics
+upload, privacy, redaction, storage, and quota contract.
+
 See `docs/deployment-status.md` for the latest recorded VPS deployment status.
 
 See `docs/identity-auth-runbook.md` for Steam/GitHub identity provider

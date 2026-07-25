@@ -79,8 +79,8 @@ intended long-lived public origin is `https://vapor.ghf-studios.site`.
 | --- | --- |
 | View public homepage/docs | none |
 | Upload docs | docs upload token for now; future root/pipeline auth |
-| Upload diagnostics | explicit opt-in client upload; future identity-aware policy |
-| List/download diagnostics | admin token for now; future root session |
+| Upload diagnostics | explicit opt-in client upload; v1 legacy text and v2 structured JSON |
+| List/download diagnostics | diagnostics admin token for now; future identity-root session |
 | Create Steam player profile | Steam OpenID browser proof |
 | Link GitHub | existing Steam session + GitHub OAuth proof |
 | View admin dashboard data | non-expired root dashboard session |
@@ -92,6 +92,11 @@ intended long-lived public origin is `https://vapor.ghf-studios.site`.
 
 Server-local admin tokens are operational bootstrap tools. They should not be
 the normal UI or developer workflow after a root profile exists.
+
+The target replacement for service-local Docs/Diagnostics read/write tokens is
+the audience-bound introspection model in
+`docs/cross-service-authorization-contract.md`. That contract is not deployed
+yet; services must fail closed until they intentionally consume it.
 
 ## Role-grant contract
 
@@ -144,6 +149,22 @@ The VPS also runs a root-owned automatic state-export timer. It creates
 `/etc/vapor-server` secrets, and prunes old automatically named bundles by
 `VAPOR_BACKUP_RETENTION_COUNT` so backups do not grow without bound.
 
+Diagnostics source now defines a v2 report contract for structured, explicit
+opt-in JSON uploads while preserving the v1 text-upload route. The v2 storage
+shape is:
+
+```text
+/var/lib/vapor-server/diagnostics/runs/
+  diag-<unix-milliseconds>-<uuid-v4>/
+    metadata.json
+    metadata.toml
+    vapor.log
+```
+
+See `docs/diagnostics-report-contract-v2.md` for schema, redaction, quota, and
+privacy rules. This source-level contract should not be read as a live VPS
+deployment claim until `docs/deployment-status.md` is updated after verification.
+
 ## Deployment contract
 
 The current deployment path is:
@@ -177,6 +198,8 @@ Minimum checks before claiming the stack is good:
 - removed legacy routes return `404`;
 - profile listings do not expose internal profile ids;
 - diagnostics smoke upload redacts obvious secrets;
+- diagnostics v2 smoke upload accepts structured explicit-consent JSON, stores
+  redacted output, and does not echo distinctive fake secret values;
 - docs route serves the current docs bundle;
 - state export excludes `/etc/vapor-server` secrets;
 - automatic state-export timer is enabled and active.
@@ -191,8 +214,8 @@ These are not reasons to stop; they are the next places to widen the pipe.
   contract exists yet.
 - Docs and diagnostics still use token/admin-token scaffolds rather than
   identity-root authorization.
-- Diagnostics schema, retention, redaction contract, and root download UX need a
-  proper contract before broad client integration.
+- Diagnostics v2 schema, quota, and redaction source contract exists; identity
+  authorization for diagnostics read/export is still pending.
 - Restore/import has a root-level file-state path but service-owned import
   formats are not mature.
 - Deployment is direct and useful, but branch protection/GitHub trigger secrets

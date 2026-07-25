@@ -1,32 +1,22 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=http-contract-checks.sh
+source "${SCRIPT_DIR}/http-contract-checks.sh"
+
 curl --fail --silent --show-error http://127.0.0.1:7111/healthz >/dev/null
 curl --fail --silent --show-error http://127.0.0.1:7112/healthz >/dev/null
 curl --fail --silent --show-error http://127.0.0.1:7112/v1/status >/dev/null
 curl --fail --silent --show-error http://127.0.0.1:7113/healthz >/dev/null
 curl --fail --silent --show-error http://127.0.0.1:7113/v1/auth/status >/dev/null
-identity_audit_status="$(
-  curl --silent --show-error --output /dev/null --write-out "%{http_code}" \
-    http://127.0.0.1:7113/v1/admin/audit
-)"
-if [ "${identity_audit_status}" != "401" ]; then
-  echo "health: expected unauthenticated identity audit to return 401, got ${identity_audit_status}" >&2
-  exit 1
-fi
-identity_revoke_status="$(
-  curl --silent --show-error --output /dev/null --write-out "%{http_code}" \
-    --request POST \
-    --header "content-type: application/json" \
-    --data '{"role":"root","steam_id64":"76561190000000000","github_login":"nobody"}' \
-    http://127.0.0.1:7113/v1/admin/roles/revoke
-)"
-if [ "${identity_revoke_status}" != "401" ]; then
-  echo "health: expected unauthenticated identity role revoke to return 401, got ${identity_revoke_status}" >&2
-  exit 1
-fi
 curl --fail --silent --show-error http://127.0.0.1:7114/healthz >/dev/null
 curl --fail --silent --show-error http://127.0.0.1:7114/v1/status >/dev/null
+check_unauthenticated_http_contracts \
+  --homepage-base http://127.0.0.1:7111 \
+  --docs-base http://127.0.0.1:7112 \
+  --identity-base http://127.0.0.1:7113 \
+  --diagnostics-base http://127.0.0.1:7114
 systemctl is-enabled --quiet vapor-state-export.timer
 systemctl is-active --quiet vapor-state-export.timer
 
