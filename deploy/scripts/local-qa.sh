@@ -77,6 +77,12 @@ run_cargo_tests() {
   done
 }
 
+run_python_tests() {
+  if [ -d "${REPO_ROOT}/deploy/tests" ]; then
+    python3 -m unittest discover -s "${REPO_ROOT}/deploy/tests" -p 'test_*.py'
+  fi
+}
+
 run_cargo_clippy() {
   local manifest
   for manifest in \
@@ -102,6 +108,8 @@ run_caddy_validation() {
 }
 
 run_bash_syntax
+python3 -m py_compile "${REPO_ROOT}/deploy/scripts/state-bundle-validate.py"
+run_python_tests
 run_cargo_fmt
 run_cargo_tests
 if [ "${run_clippy}" = true ]; then

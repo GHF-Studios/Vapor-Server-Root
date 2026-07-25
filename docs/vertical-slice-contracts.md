@@ -149,6 +149,12 @@ The VPS also runs a root-owned automatic state-export timer. It creates
 `/etc/vapor-server` secrets, and prunes old automatically named bundles by
 `VAPOR_BACKUP_RETENTION_COUNT` so backups do not grow without bound.
 
+Restore runs a structural validator before extraction or service shutdown. The
+validator rejects path traversal, absolute paths, links/special files,
+unsupported manifest versions, duplicate entries, and any manifest that does not
+assert `secrets_included = false`. See
+`docs/operations-evidence-and-recovery-contract.md`.
+
 Diagnostics source now defines a v2 report contract for structured, explicit
 opt-in JSON uploads while preserving the v1 text-upload route. The v2 storage
 shape is:
@@ -220,6 +226,7 @@ Minimum checks before claiming the stack is good:
 - docs smoke upload creates/promotes a release and status reports the current
   release pointer;
 - state export excludes `/etc/vapor-server` secrets;
+- restore rejects structurally unsafe state bundles before extraction;
 - automatic state-export timer is enabled and active.
 
 ## Current wobbly seams

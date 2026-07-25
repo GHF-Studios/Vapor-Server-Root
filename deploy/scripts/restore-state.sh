@@ -69,15 +69,7 @@ if ! command -v flock >/dev/null 2>&1; then
   exit 1
 fi
 
-if ! tar -tzf "${BUNDLE_PATH}" vapor-server-state/manifest.toml >/dev/null; then
-  echo "error: bundle is missing vapor-server-state/manifest.toml" >&2
-  exit 1
-fi
-
-if ! tar -tzf "${BUNDLE_PATH}" vapor-server-state/state/ >/dev/null; then
-  echo "error: bundle is missing vapor-server-state/state/" >&2
-  exit 1
-fi
+python3 "${SCRIPT_DIR}/state-bundle-validate.py" "${BUNDLE_PATH}"
 
 LOCK_FILE=/run/vapor-server-deploy.lock
 exec 9>"${LOCK_FILE}"

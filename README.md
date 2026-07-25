@@ -83,6 +83,9 @@ release, promotion, rollback, and export semantics.
 See `docs/diagnostics-report-contract-v2.md` for the structured diagnostics
 upload, privacy, redaction, storage, and quota contract.
 
+See `docs/operations-evidence-and-recovery-contract.md` for state-bundle
+validation, restore behavior, and recovery boundaries.
+
 See `docs/deployment-status.md` for the latest recorded VPS deployment status.
 
 See `docs/identity-auth-runbook.md` for Steam/GitHub identity provider

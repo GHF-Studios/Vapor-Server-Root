@@ -100,7 +100,8 @@ while the implementation is still moving quickly.
   backups, public HTTP smoke checks, and local health checks. It also contains
   first-pass whole-server file-state export/restore scripts for
   `/var/lib/vapor-server`, excluding server-local env/token files under
-  `/etc/vapor-server`.
+  `/etc/vapor-server`. Restore now validates bundle structure before extraction
+  and before stopping services.
 - Domain-independent pre-DNS work is allowed through temporary HTTP fallback
   routing, SSH/UFW hardening, and local/IP smoke checks. The fallback is not the
   final public product URL.
@@ -114,6 +115,8 @@ while the implementation is still moving quickly.
 - Remove the pre-DNS IP/HTTP fallback once DNS and HTTPS are verified.
 - Exercise restore/import on a fresh or disposable server instance, including
   bundles produced by the automatic state-export timer.
+- Add service-owned semantic export/import validation after the root-level
+  structural bundle validator has been exercised.
 - Add SQLite migration/bootstrap handling for identity and any service-owned
   state that should be queryable.
 - Evolve export/import bundle formats for docs, identity, and diagnostics beyond
