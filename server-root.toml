@@ -41,3 +41,10 @@ repo = "https://github.com/GHF-Studios/Vapor-Diagnostics-Server.git"
 path = "Vapor-Diagnostics-Server"
 route = "/api/diagnostics/"
 state = "diagnostics-uploads"
+
+[[services]]
+id = "registry"
+repo = "https://github.com/GHF-Studios/Vapor-Registry-Server.git"
+path = "Vapor-Registry-Server"
+route = "/api/registry/"
+state = "registry"

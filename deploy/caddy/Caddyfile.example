@@ -13,6 +13,10 @@ vapor.ghf-studios.site {
 		reverse_proxy 127.0.0.1:7114
 	}
 
+	handle_path /api/registry/* {
+		reverse_proxy 127.0.0.1:7115
+	}
+
 	handle {
 		reverse_proxy 127.0.0.1:7111
 	}
