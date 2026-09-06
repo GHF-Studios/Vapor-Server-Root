@@ -10,3 +10,6 @@
 [submodule "Vapor-Diagnostics-Server"]
 	path = Vapor-Diagnostics-Server
 	url = https://github.com/GHF-Studios/Vapor-Diagnostics-Server.git
+[submodule "Vapor-Registry-Server"]
+	path = Vapor-Registry-Server
+	url = https://github.com/GHF-Studios/Vapor-Registry-Server.git
