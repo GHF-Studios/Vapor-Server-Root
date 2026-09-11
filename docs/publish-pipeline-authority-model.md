@@ -9,7 +9,7 @@ current documented state:
 
 - `Vapor-Identity-Server` owns Steam identity, GitHub identity, Vapor roles,
   sessions, and authorization facts.
-- `Vapor-Server-Root` owns deployment/orchestration, Caddy/systemd wiring, and
+- `Vapor-Platform-Server` owns deployment/orchestration, Caddy/systemd wiring, and
   composed export/import.
 - Steam browser identity, Steamworks/WebAPI verification, Vapor roles, and
   publishing authority are separate layers.

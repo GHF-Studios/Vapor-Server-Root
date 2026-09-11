@@ -15,7 +15,7 @@ existing service just to avoid naming a new boundary.
 
 ## Current implemented baseline
 
-- `Vapor-Server-Root` owns deployment/orchestration, reverse-proxy routing,
+- `Vapor-Platform-Server` owns deployment/orchestration, reverse-proxy routing,
   systemd units/timers, operator scripts, and whole-system export/import
   composition.
 - `Vapor-Homepage-Server` owns the public homepage/legal/product surface.
@@ -91,7 +91,7 @@ Future state should be service-owned:
 - registry/catalog: catalog metadata, visibility, channels/version pointers;
 - capability surface: capability definitions/grants/audit only, not domain data.
 
-Whole-system backup/restore remains composed by `Vapor-Server-Root`, but each
+Whole-system backup/restore remains composed by `Vapor-Platform-Server`, but each
 stateful service should define its own export/import contract over time. No
 service should read another service's database as an integration path.
 

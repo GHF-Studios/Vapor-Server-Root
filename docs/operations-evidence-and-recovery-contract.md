@@ -5,7 +5,7 @@ authorization.
 
 ## Purpose
 
-`Vapor-Server-Root` owns composed operational recovery. Individual services own
+`Vapor-Platform-Server` owns composed operational recovery. Individual services own
 their own state semantics over time, but root backup/restore remains the
 whole-system recovery wrapper for the single-VPS slice.
 

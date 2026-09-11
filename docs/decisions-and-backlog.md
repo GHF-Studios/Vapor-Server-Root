@@ -5,12 +5,12 @@ while the implementation is still moving quickly.
 
 ## Accepted boundaries
 
-- `Vapor-Server-Root` lives beside `Vapor-Root`; it is not a `Vapor-Root`
+- `Vapor-Platform-Server` lives beside Vapor Client; it is not a Vapor Client
   submodule.
 - Future server domain ownership is tracked in
   `docs/server-domain-boundaries.md`; that document should be kept aligned with
   this accepted-boundaries list as new service boundaries become real.
-- `Vapor-Server-Root` owns deployment/orchestration, shared operations
+- `Vapor-Platform-Server` owns deployment/orchestration, shared operations
   conventions, and whole-system export/import composition.
 - Homepage, docs, identity, and diagnostics remain separate repositories and
   separate service binaries.
@@ -88,10 +88,10 @@ while the implementation is still moving quickly.
   report route with explicit consent, allowlisted text artifacts,
   collision-resistant run ids, stronger redaction, and a non-destructive
   aggregate storage quota.
-- `Vapor-Server-Root` tracks the services as root-level submodules named after
+- `Vapor-Platform-Server` tracks the services as root-level submodules named after
   their repositories. Normal local development should use those submodule
   worktrees, not separate sibling checkouts.
-- `Vapor-Server-Root` now contains first-pass direct VPS deployment automation:
+- `Vapor-Platform-Server` now contains first-pass direct VPS deployment automation:
   Ubuntu bootstrap, root-repo deploy, Caddy config installation, systemd unit
   installation, automatic branch polling via systemd timer, GitHub Actions
   deploy triggering through a restricted VPS user, automatic state-export

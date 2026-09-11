@@ -1,13 +1,13 @@
-# Vapor Server Root
+# Vapor Platform Server
 
-`Vapor-Server-Root` is the deployment and operations root for Vapor's public
-web/server surface. It intentionally lives beside `Vapor-Root`; it is not a
+`Vapor-Platform-Server` is the deployment and operations root for Vapor's public
+web/server surface. It intentionally lives beside Vapor Client; it is not a
 submodule of the game/app root.
 
 ## Intended service topology
 
 ```text
-Vapor-Server-Root/
+Vapor-Platform-Server/
   Vapor-Homepage-Server/      -> Vapor-Homepage-Server
   Vapor-Docs-Server/          -> Vapor-Docs-Server
   Vapor-Identity-Server/      -> Vapor-Identity-Server

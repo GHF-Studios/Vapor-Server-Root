@@ -7,7 +7,7 @@ usage() {
   cat >&2 <<'USAGE'
 usage: deploy-vapor-root-docs.sh --vapor-root PATH --base-url URL [--token-env NAME] [--token-file PATH]
 
-Builds the curated Vapor-Root docs bundle and deploys it to the public Vapor
+Builds the curated Vapor Client docs bundle and deploys it to the public Vapor
 docs route over HTTP.
 
 Before DNS is ready, use:

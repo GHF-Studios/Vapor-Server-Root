@@ -1,5 +1,5 @@
 [Unit]
-Description=Deploy Vapor Server Root from configured branch
+Description=Deploy Vapor Platform Server from configured branch
 Wants=network-online.target
 After=network-online.target
 

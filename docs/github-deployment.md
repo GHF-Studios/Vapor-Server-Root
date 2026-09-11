@@ -1,6 +1,6 @@
 # GitHub-controlled deployment
 
-`Vapor-Server-Root` currently deploys from the VPS by polling `main` with
+`Vapor-Platform-Server` currently deploys from the VPS by polling `main` with
 `vapor-deploy.timer`. GitHub Actions can also trigger the same server-side
 deploy service immediately after `main` changes.
 
@@ -19,7 +19,7 @@ already-installed deployment service.
 
 ## Required repository secrets
 
-On `GHF-Studios/Vapor-Server-Root`:
+On `GHF-Studios/Vapor-Platform-Server`:
 
 ```text
 VAPOR_DEPLOY_HOST

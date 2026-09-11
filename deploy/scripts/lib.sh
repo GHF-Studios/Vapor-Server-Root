@@ -6,7 +6,7 @@ DEPLOY_DIR="$(cd -- "${SCRIPT_DIR}/.." && pwd)"
 REPO_ROOT="$(cd -- "${DEPLOY_DIR}/.." && pwd)"
 
 VAPOR_DOMAIN="${VAPOR_DOMAIN:-vapor.ghf-studios.site}"
-VAPOR_REPO_URL="${VAPOR_REPO_URL:-https://github.com/GHF-Studios/Vapor-Server-Root.git}"
+VAPOR_REPO_URL="${VAPOR_REPO_URL:-https://github.com/GHF-Studios/Vapor-Platform-Server.git}"
 VAPOR_BRANCH="${VAPOR_BRANCH:-main}"
 VAPOR_DEPLOY_ROOT="${VAPOR_DEPLOY_ROOT:-/opt/vapor-server-root}"
 VAPOR_STATE_ROOT="${VAPOR_STATE_ROOT:-/var/lib/vapor-server}"

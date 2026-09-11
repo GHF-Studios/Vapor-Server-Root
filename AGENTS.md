@@ -1,7 +1,7 @@
 # Agent instructions
 
 This repository owns Vapor server deployment/orchestration. Keep it separate
-from `Vapor-Root` application publishing work.
+from Vapor Client application publishing work.
 
 Rules:
 
@@ -10,7 +10,7 @@ Rules:
 - Keep homepage, docs, identity, and diagnostics as separate service concerns.
 - Do not fold service business logic into this root repo.
 - Keep the service repositories checked out as root-level submodules named after
-  their repositories, matching the `Vapor-Root` workspace shape. Do not maintain
+  their repositories, matching the Vapor Client workspace shape. Do not maintain
   separate sibling checkouts as the normal workspace shape.
 - Prefer path routing through one public domain.
 - Preserve independent rebuild/deploy of each service.

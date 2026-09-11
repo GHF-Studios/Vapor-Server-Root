@@ -5,7 +5,7 @@ usage() {
   cat >&2 <<'USAGE'
 usage: build-vapor-root-docs-bundle.sh --vapor-root PATH [--output PATH]
 
-Builds a curated Vapor-Root docs site bundle as a tar.gz archive suitable for
+Builds a curated Vapor Client docs site bundle as a tar.gz archive suitable for
 uploading to Vapor-Docs-Server /current.tar.gz.
 
 The bundle intentionally excludes .agents, raw planning intake, local state,
@@ -53,7 +53,7 @@ fi
 
 VAPOR_ROOT="$(cd -- "${VAPOR_ROOT}" && pwd)"
 if [ ! -f "${VAPOR_ROOT}/App.vapor.toml" ]; then
-  echo "error: ${VAPOR_ROOT} does not look like Vapor-Root" >&2
+  echo "error: ${VAPOR_ROOT} does not look like Vapor Client source" >&2
   exit 1
 fi
 
@@ -150,7 +150,7 @@ li { margin: .25rem 0; }
 </ul>
 <h2>Root context</h2>
 <ul>
-  <li><a href="root/README.md">Vapor-Root README</a></li>
+  <li><a href="root/README.md">Vapor Client README</a></li>
   <li><a href="root/App.vapor.toml">Runtime manifest</a></li>
   <li><a href="root/App-Source.vapor.toml">Source manifest</a></li>
   <li><a href="vapor/roadmap/README.md">Roadmap</a></li>

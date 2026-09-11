@@ -26,11 +26,11 @@ server-local env files under `/etc/vapor-server`.
 ## Verified deployed source
 
 These are the runtime/service commits verified on the VPS. Documentation-only
-commits in `Vapor-Server-Root` may be newer than the runtime-impacting commit
+commits in `Vapor-Platform-Server` may be newer than the runtime-impacting commit
 recorded here.
 
 ```text
-Vapor-Server-Root       a2a9592
+Vapor-Platform-Server       a2a9592
 Vapor-Homepage-Server   a41aedc4180792d5561a8e3bf12a1383e172c1ea
 Vapor-Docs-Server       63ff610
 Vapor-Identity-Server   ca9e61e

@@ -16,7 +16,7 @@ browser/Vapor client
   -> Caddy path router
   -> independently owned service binaries
   -> service-owned state under /var/lib/vapor-server
-  -> export/import/rebuild operations from Vapor-Server-Root
+  -> export/import/rebuild operations from Vapor-Platform-Server
 ```
 
 The goal is not a polished production frontend yet. The goal is that every
@@ -25,7 +25,7 @@ path.
 
 ## Repository ownership
 
-- `Vapor-Server-Root` owns orchestration: Caddy, systemd, deploy scripts,
+- `Vapor-Platform-Server` owns orchestration: Caddy, systemd, deploy scripts,
   bootstrap/hardening, whole-system export/import composition, and operator
   runbooks.
 - `Vapor-Homepage-Server` owns public homepage/legal/product pages.
@@ -141,7 +141,7 @@ State must be recoverable through:
 2. initialize empty service state; or
 3. restore a previously exported state bundle.
 
-Whole-system export/import is composed in `Vapor-Server-Root`; service-specific
+Whole-system export/import is composed in `Vapor-Platform-Server`; service-specific
 formats should become explicit service contracts over time.
 
 The VPS also runs a root-owned automatic state-export timer. It creates

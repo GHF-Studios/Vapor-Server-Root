@@ -1,4 +1,4 @@
-name: Deploy Vapor Server Root
+name: Deploy Vapor Platform Server
 
 on:
   push:
@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: vapor-server-root-deploy
+  group: vapor-platform-server-deploy
   cancel-in-progress: false
 
 permissions:

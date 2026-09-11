@@ -10,7 +10,7 @@ Current baseline:
 - Caddy reverse proxy and HTTPS;
 - systemd service units;
 - SQLite-backed identity state;
-- branch-based source deployment from `Vapor-Server-Root`;
+- branch-based source deployment from `Vapor-Platform-Server`;
 - state under `/var/lib/vapor-server`;
 - service env files under `/etc/vapor-server`;
 - source checkout under `/opt/vapor-server-root`.
@@ -78,7 +78,7 @@ for smoke testing only; the intended public endpoint remains
 - `scripts/smoke-diagnostics.sh`: upload a diagnostics smoke run and verify
   obvious secret redaction.
 - `scripts/build-vapor-root-docs-bundle.sh`: build a curated Vapor docs tar.gz
-  bundle from a local `Vapor-Root` checkout.
+  bundle from a local Vapor Client checkout.
 - `scripts/upload-docs-via-http.sh`: upload a docs bundle to the public docs
   route, such as `http://82.165.77.104/docs` before DNS is ready.
 - `scripts/upload-docs-via-ssh.sh`: alternate upload path that posts from the
